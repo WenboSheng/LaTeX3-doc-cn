@@ -1,0 +1,1231 @@
+\documentclass{l3doc}
+\usepackage[UTF8, punct = kaiming, heading=false]{ctex}
+\usepackage{amstext}
+\usepackage{hyperref}
+
+\providecommand\acro[1]{\textsc{\MakeLowercase{#1}}}
+\newenvironment{arg-description}{%
+\begin{itemize}\def\makelabel##1{\hss\llap{\bfseries##1}}}{\end{itemize}}
+
+% \title{^^A
+%   The \textsf{xparse} package\\ Document command parser^^A
+% }
+%
+% \author{^^A
+%  The \LaTeX3 Project\thanks
+%    {^^A
+%      E-mail:
+%        \href{mailto:latex-team@latex-project.org}
+%          {latex-team@latex-project.org}^^A
+%    }^^A
+% }
+%
+% \date{Released 2017/11/14}
+
+\begin{document}
+    
+\title{\textsf{xparse} 宏包：文档命令解析器\footnotemark}
+\author{\LaTeX3 项目组}
+\date{发布于 2017/11/14}
+
+\maketitle
+
+\makeatletter
+\def\@thefnmark{*}
+\@footnotetext{
+    本文档是 \href{http://mirrors.ctan.org/macros/latex/contrib/l3packages/xparse.pdf}{xparse} 宏包文档的中译本。
+    \pkg{xparse} 宏包提供了 \LaTeX3 编程中定义文档命令和环境的方法。
+    为方便起见修改了一些章节结构。
+    
+    一些特有词汇翻译如下：
+    \begin{description}
+        \item[argument specification] 选项规范
+        \item[embellishment] 装饰器
+        \item[argument processors] 选项处理器
+    \end{description}
+
+    本文档的地址为：\url{https://github.com/WenboSheng/LaTeX3-doc-cn/xparse-doc-cn}
+
+本文档可在 \LaTeX\ 项目公共协议（LPPL, \LaTeX\ Project Public License）下复制和分发。
+LPPL 协议的内容见 \url{http://www.latex-project.org/lppl/}。
+\begin{flushright}
+    盛文博\\
+    \href{mailto:wbsheng88@foxmail.com}{<wbsheng88@foxmail.com>}\\
+    2017年12月10日
+\end{flushright}
+}
+\makeatother
+
+%
+% The \pkg{xparse} package provides a high-level interface for
+% producing document-level commands. In that way, it is intended as
+% a replacement for the \LaTeXe{} \cs{newcommand} macro. However,
+% \pkg{xparse} works so that the interface to a function (optional
+% arguments, stars and mandatory arguments, for example) is separate
+% from the internal implementation. \pkg{xparse} provides a normalised
+% input for the internal form of a function, independent of the
+% document-level argument arrangement.
+\pkg{xparse} 宏包为生成文档命令提供了高层次接口，
+旨在代替 \LaTeXe{} 的 \cs{newcommand} 宏。
+\pkg{xparse} 将为函数准备的接口（例如可选项、星号、必选项等）
+与内部具体实现相分离。
+\pkg{xparse} 将函数的内部形式和文档水平的选项组织分离开，
+并为前者提供了标准化输入。
+
+%
+% At present, the functions in \pkg{xparse} which are regarded as
+% \enquote{stable} are:
+% \begin{itemize}
+%   \item \cs{NewDocumentCommand}
+%   \item \cs{RenewDocumentCommand}
+%   \item \cs{ProvideDocumentCommand}
+%   \item \cs{DeclareDocumentCommand}
+%   \item \cs{NewDocumentEnvironment}
+%   \item \cs{RenewDocumentEnvironment}
+%   \item \cs{ProvideDocumentEnvironment}
+%   \item \cs{DeclareDocumentEnvironment}
+%   \item \cs{NewExpandableDocumentCommand}
+%   \item \cs{RenewExpandableDocumentCommand}
+%   \item \cs{ProvideExpandableDocumentCommand}
+%   \item \cs{DeclareExpandableDocumentCommand}
+%   \item \cs{IfNoValue(TF)}
+%   \item \cs{IfValue(TF)}
+%   \item \cs{IfBoolean(TF)}
+% \end{itemize}
+% with the other functions currently regarded as \enquote{experimental}. Please
+% try all of the commands provided here, but be aware that the
+% experimental ones may change or disappear.
+%
+目前，\pkg{xparse} 中可以认为是“稳定”的函数有：
+\begin{itemize}
+\item \cs{NewDocumentCommand}
+\item \cs{RenewDocumentCommand}
+\item \cs{ProvideDocumentCommand}
+\item \cs{DeclareDocumentCommand}
+\item \cs{NewDocumentEnvironment}
+\item \cs{RenewDocumentEnvironment}
+\item \cs{ProvideDocumentEnvironment}
+\item \cs{DeclareDocumentEnvironment}
+\item \cs{NewExpandableDocumentCommand}
+\item \cs{RenewExpandableDocumentCommand}
+\item \cs{ProvideExpandableDocumentCommand}
+\item \cs{DeclareExpandableDocumentCommand}
+\item \cs{IfNoValue(TF)}
+\item \cs{IfValue(TF)}
+\item \cs{IfBoolean(TF)}
+\end{itemize}
+其它函数目前尚处于“实验”性质阶段。
+请尝试使用这里列出的所有命令。
+不过要当心的是，实验性质的函数可能会改变或取消。
+
+% \subsection{Specifying arguments}
+\section{选项指定}
+
+%
+% Before introducing the functions used to create document commands,
+% the method for specifying arguments with \pkg{xparse} will be
+% illustrated. In order to allow each argument to be defined
+% independently, \pkg{xparse} does not simply need to know the
+% number of arguments for a function, but also the nature of each
+% one. This is done by constructing an \emph{argument specification},
+% which defines the number of arguments, the type of each argument
+% and any additional information needed for \pkg{xparse} to read the
+% user input and properly pass it through to internal functions.
+在介绍用于创建文档命令的函数之前，
+首先展示在 \pkg{xparse} 中如何指定选项。
+为了允许每一选项都能独立定义，
+\pkg{xparse} 不仅需要知道函数选项的数量，还需要知道每一选项的属性。
+这可以通过构造\emph{选项规范}实现。
+选项规范定义了选项数量，每一选项的类型，以及任何 \pkg{xparse} 需要的额外信息
+——\pkg{xparse} 通过这些信息才可以正确地读取用户输入并将其传递给内部函数。
+
+%
+% The basic form of the argument specifier is a list of letters, where
+% each letter defines a type of argument. As will be described below,
+% some of the types need additional information, such as default values.
+% The argument types can be divided into two, those which define
+% arguments that are mandatory (potentially raising an error if not
+% found) and those which define optional arguments. The mandatory types
+% are:
+选项规范的基本形式是一组字母，
+其中每一字母定义了一种选项类型。
+如下所述，一些类型还需要额外信息（比如默认值）。
+选项类型可以分成两种，一些定义了必选项（如果未提供则会报错），另一些定义了可选项。
+必选项类型有：
+\begin{itemize}[font=\ttfamily]
+%   \item[m] A standard mandatory argument, which can either be a single
+%     token alone or multiple tokens surrounded by curly braces.
+%     Regardless of the input, the argument will be passed to the
+%     internal code surrounded by a brace pair. This is the \pkg{xparse}
+%     type specifier for a normal \TeX{} argument.
+\item[m] （mandatory）标准的必选项，可以是单记号或者是带大括号的多个记号。
+不过不管实际输入是怎样，传递到内部代码的选项总是会带大括号。
+\pkg{xparse} 据此指定常规的 \TeX{} 选项类型。
+%   \item[l] An argument which reads everything up to the first
+%     begin-group token: in standard \LaTeX{} this is a left brace.
+\item[l] （left）该选项会依次读取，直到第一个组开始记号：
+在标准 \LaTeX{} 中是左大括号。
+%   \item[r] Reads a \enquote{required} delimited argument, where the
+%     delimiters are given as \meta{char1} and \meta{char2}:
+%     \texttt{r}\meta{char1}\meta{char2}. If the opening \meta{character}
+%     is missing, the default marker |-NoValue-| will be inserted after
+%     a suitable error.
+\item[r] （right）读取“必须”定界的选项，其中定界符由 \meta{char1} 和 \meta{char2} 给出，
+即：\texttt{r}\meta{char1}\meta{char2}。
+如果 \meta{字符character} 缺失，则会产生相应的错误并插入默认标记 |-NoValue-|。
+%   \item[R] As for \texttt{r}, this is a \enquote{required} delimited
+%     argument but has a user-definable recovery \meta{default}, given
+%     as \texttt{R}\meta{char1}\meta{char2}\marg{default}.
+\item[R] （Right）与 \texttt{r} 类似，这是一个“必须”定界的选项，
+不同之处是缺省标记 \meta{default} 由用户定义，即：\texttt{R}\meta{char1}\meta{char2}\marg{default}。
+%   \item[u] Reads an argument \enquote{until} \meta{tokens} are encountered,
+%     where the desired \meta{tokens} are given as an argument to the
+%     specifier: \texttt{u}\marg{tokens}.
+\item[u] （until）读取选项，“直到”遇到记号 \meta{tokens}。
+其中，要求的 \meta{tokens} 会传递给指示符，即 \texttt{u}\marg{tokens}。
+%   \item[v] Reads an argument \enquote{verbatim}, between the following
+%     character and its next occurrence, in a way similar to the argument
+%     of the \LaTeXe{} command \cs{verb}. Thus a \texttt{v}-type argument
+%     is read between two matching tokens, which cannot be any of |%|, |\|,
+%     |#|, |{|, |}| or \verb*| |.
+%     The verbatim argument can also be enclosed between braces, |{| and |}|.
+%     A command with a verbatim
+%     argument will not work when it appears within an argument of
+%     another function.
+\item[v] （verbatim）读取“抄录”选项，抄录内容位于接下来的字符和再次遇到该字符之间，
+这与 \LaTeXe{} 命令 \cs{verb} 的选项类似。
+因此，在两个匹配记号之间的内容会作为 \texttt{v} 类型的选项读取，
+但匹配记号不可以是这些字符：\verb|%|, |\|, |#|, |{|, |}| 或 \verb*| |。
+抄录选项也可以放在大括号 |{| 和 |}| 内。
+带有抄录选项的命令不可以位于另一个函数的选项内。
+\end{itemize}
+
+% The types which define optional arguments are:
+可选项的类型有：
+ \begin{itemize}[font=\ttfamily]
+%   \item[o] A standard \LaTeX{} optional argument, surrounded with square
+%     brackets, which will supply
+%     the special |-NoValue-| marker if not given (as described later).
+\item[o] （optional）标准的 \LaTeX{} 可选项，位于方括号内，
+如果未给出则代之以特殊标记 |-NoValue-|（稍后介绍）。
+%   \item[d] An optional argument which is delimited by \meta{char1}
+%     and \meta{char2}, given as follows:
+%     \texttt{d}\meta{char1}\meta{char2}. As with \texttt{o}, if no
+%     value is given the special marker |-NoValue-| is returned.
+\item[d] （delimited）由 \meta{char1} 和 \meta{char2} 定界的可选项，即：\texttt{d}\meta{char1}\meta{char2}。
+与 \texttt{o} 类似，如果未给出则返回特殊标记 |-NoValue-|。
+%   \item[O] As for \texttt{o}, but returns \meta{default} if no
+%     value is given.  Should be given as \texttt{O}\marg{default}.
+\item[O] （Optional）与 \texttt{o} 类似，但是当未给出时返回 \meta{default}。
+因此形式为：\texttt{O}\marg{default}。
+%   \item[D] As for \texttt{d}, but returns \meta{default} if no
+%     value is given: \texttt{D}\meta{char1}\meta{char2}\marg{default}.
+%     Internally, the \texttt{o}, \texttt{d} and \texttt{O} types are
+%     short-cuts to an appropriated-constructed \texttt{D} type argument.
+\item[D] （Delimited）与 \texttt{d} 类似，但是当未给出时返回 \meta{default}，
+即：\texttt{D}\meta{char1}\meta{char2}\marg{default}。
+实际上， \texttt{o}, \texttt{d} 和 \texttt{O} 的内部实现其实都是特殊的 \texttt{D} 选项简称。
+%   \item[s] An optional star, which will result in a value
+%     \cs{BooleanTrue} if a star is present and \cs{BooleanFalse}
+%     otherwise (as described later).
+\item[s] （star）可选的星号，当星号存在时会返回 \cs{BooleanTrue}，否则返回 \cs{BooleanFalse}（稍后介绍）。
+%   \item[t] An optional \meta{char}, which will result in a value
+%     \cs{BooleanTrue} if \meta{char} is present and \cs{BooleanFalse}
+%     otherwise. Given as \texttt{t}\meta{char}.
+\item[t] （token）可选的 \meta{字符char}，当该 \meta{字符char} 存在时会返回 \cs{BooleanTrue}，
+否则返回 \cs{BooleanFalse}，即形式为 \texttt{t}\meta{char}。
+%   \item[g] An optional argument given inside a pair of \TeX{} group
+%     tokens (in standard \LaTeX, |{| \ldots |}|), which returns
+%     |-NoValue-| if not present.
+\item[g] （group）可选项，其内容位于 \TeX{} 组记号对内部（在标准 \LaTeX{} 中为 |{| \ldots{} |}|），
+未给出时返回 |-NoValue-|。
+%   \item[G] As for \texttt{g} but returns \meta{default} if no value
+%     is given: \texttt{G}\marg{default}.
+\item[G] （Group）与 \texttt{g} 类似，但是当未给出时返回指定的默认值 \meta{default}，即：\texttt{G}\marg{default}。
+%   \item[e] A set of optional \emph{embellishments}, each of which
+%     requires a \emph{value}: \texttt{e}\marg{chars}.  If an
+%     embellishment is not present, |-NoValue-| is returned.  Each
+%     embellishment gives one argument, ordered as for the list of
+%     \meta{chars} in the argument specification.  All \meta{chars}
+%     must be distinct.  \emph{This is an experimental type}.
+\item[e] （embellishment）一组可选的“装饰器”，其中每一个都需要对应的\emph{值}，即：\texttt{e}\marg{chars}。
+如果某个装饰器未给出则返回 |-NoValue-|。
+每一个装饰器给出一个选项，并且按照选项规范中 \meta{chars} 列表进行排序。
+所有的 \meta{chars} 必须互不相同。\emph{这是一个实验性质的选项类型。}
+%   \item[E] As for \texttt{e} but returns one or more \meta{defaults}
+%     if values are not given: \texttt{E}\marg{chars}\marg{defaults}. See
+%     Section~\ref{sec:embellishment} for more details.
+\item[E] （Embellishment）与\texttt{e} 类似，但是当未给出值时返回若干个指定的默认值 \meta{defaults}，
+即：\texttt{E}\marg{chars}\marg{defaults}。
+详见第~\ref{sec:embellishment} 节。
+ \end{itemize}
+
+%
+% Using these specifiers, it is possible to create complex input syntax
+% very easily. For example, given the argument definition
+% `|s o o m O{default}|', the input `|*[Foo]{Bar}|' would be parsed as:
+使用这些选项规范就可以很容易地创建各种复杂的用户输入语法。
+例如，选项定义为“|s o o m O{default}|”，那么实际输入“|*[Foo]{Bar}|”会按照如下方式解析：
+ \begin{itemize}[nolistsep]
+   \item |#1| = |\BooleanTrue|
+   \item |#2| = |Foo|
+   \item |#3| = |-NoValue-|
+   \item |#4| = |Bar|
+   \item |#5| = |default|
+ \end{itemize}
+而“|[One][Two]{}[Three]|” 的解析方式为：
+% whereas `|[One][Two]{}[Three]|' would be parsed as:
+ \begin{itemize}[nolistsep]
+   \item |#1| = |\BooleanFalse|
+   \item |#2| = |One|
+   \item |#3| = |Two|
+   \item |#4| = ||
+   \item |#5| = |Three|
+ \end{itemize}
+
+%
+% Delimited argument types (\texttt{d}, \texttt{o} and \texttt{r}) are
+% defined such that they require matched pairs of delimiters when collecting
+% an argument. For example
+定界选项类型（\texttt{d}, \texttt{o}, \texttt{r}）在确定选项时要求匹配的成对定界符。
+例如：
+\begin{verbatim}
+    \NewDocumentCommand{\foo}{o}{#1}
+    \foo[[content]] % #1 = "[content]"
+    \foo[[]         % 报错信息为 Error: missing closing "]"
+\end{verbatim}
+% Also note that |{| and |}| cannot be used as delimiters as they are used
+% by \TeX{} as grouping tokens. Arguments to be grabbed inside these tokens
+% must be created as either \texttt{m}- or \texttt{g}-type arguments.
+另外要注意的是，|{| 和 |}| 不能用作定界符，因为在 \TeX{} 中这些是组记号。
+在这些记号内部的选项必须以 \texttt{m} 或 \texttt{g} 类型进行创建。
+
+%
+% Within delimited arguments, non-balanced or otherwise awkward tokens may
+% be included by protecting the entire argument with a brace pair
+在定界选项中，如果有不匹配的记号或者其它奇怪的情况，可以用大括号将整个选项保护起来再导入，例如
+\begin{verbatim}
+    \NewDocumentCommand{\foobar}{o}{#1}
+    \foobar[{[}]         % 由于“[” 被“隐藏”起来，这样使用是可以的
+\end{verbatim}
+ 如果大括号将\emph{整个}可选项内容全部包含，那么在处理时会被剥离：
+% These braces will be stripped if they surround the \emph{entire} content
+% of the optional argument
+\begin{verbatim}
+    \NewDocumentCommand{\foobaz}{o}{#1}
+    \foobaz[{abc}]         % => "abc"
+    \foobaz[ {abc}]         % => " {abc}"
+\end{verbatim}
+
+%
+% Two more characters have a special meaning when creating an argument
+% specifier. First, \texttt{+} is used to make an argument long (to
+% accept paragraph tokens). In contrast to \LaTeXe's \cs{newcommand},
+% this applies on an argument-by-argument basis. So modifying the
+% example to `|s o o +m O{default}|' means that the mandatory argument
+% is now \cs{long}, whereas the optional arguments are not.
+另外还有两个字符在选项规范中有特殊意义。
+首先是 \texttt{+}，用来创建 long 类型选项（可以接受跨段落的记号）。
+与 \LaTeXe{} 的 \cs{newcommand} 不同，该项功能是逐选项运行的。
+例如在“|s o o +m O{default}|”中，必选项是 \cs{long} 而可选项则不是。
+
+%
+% Secondly, the character \texttt{>} is used to declare so-called
+% \enquote{argument processors}, which can be used to modify the contents of an
+% argument before it is passed to the macro definition. The use of
+% argument processors is a somewhat advanced topic, (or at least a less
+% commonly used feature) and is covered in Section~\ref{sec:processors}.
+其次是字符 \texttt{>}，用来声明所谓的“选项处理器”，
+该功能可以在传递给宏定义之前修改选项内容。
+选项处理器的使用某种程度上已经属于高级专题，
+（或者至少是使用较少的特性），将在第~\ref{sec:processors} 节中讨论。
+
+%
+% When an optional argument is followed by a mandatory argument with the
+% same delimiter, \pkg{xparse} issues a warning because the optional
+% argument could not be omitted by the user, thus becoming in effect
+% mandatory.  This applies to \texttt{o}, \texttt{d}, \texttt{O},
+% \texttt{D}, \texttt{s}, \texttt{t}, \texttt{e}, and \texttt{E} type
+% arguments followed by \texttt{r} or \texttt{R}-type required
+% arguments, but also to \texttt{g} or \texttt{G} type arguments
+% followed by \texttt{m} type arguments.
+如果一个可选项之后跟着一个带有相同定界符的必选项，
+那么 \pkg{xparse} 会产生一个警告。
+这是因为用户此时不能省略可选项，实际上该可选项是必须的。
+该情景包括 \texttt{o}, \texttt{d}, \texttt{O}, \texttt{D}, \texttt{s}, \texttt{t}, \texttt{e} 和 \texttt{E} 类型
+之后跟着 \texttt{r} 或 \texttt{R} 类型选项，
+以及 \texttt{g} 或 \texttt{G} 之后跟着 \texttt{m} 类型选项。
+
+%
+% \subsection{Spacing and optional arguments}
+\section{空格和可选项}
+
+%
+% \TeX{} will find the first argument after a function name irrespective
+% of any intervening spaces. This is true for both mandatory and
+% optional arguments. So |\foo[arg]| and \verb*|\foo   [arg]| are
+% equivalent. Spaces are also ignored when collecting arguments up
+% to the last mandatory argument to be collected (as it must exist).
+% So after
+% \begin{verbatim}
+%   \NewDocumentCommand \foo { m o m } { ... }
+% \end{verbatim}
+% the user input |\foo{arg1}[arg2]{arg3}| and
+% \verb*|\foo{arg1}  [arg2]   {arg3}| will both be parsed in the same
+% way. However, spaces are \emph{not} ignored when parsing optional
+% arguments after the last mandatory argument. Thus with
+% \begin{verbatim}
+%   \NewDocumentCommand \foobar { m o } { ... }
+% \end{verbatim}
+% |\foobar{arg1}[arg2]| will find an optional argument but
+% \verb*|\foobar{arg1} [arg2]| will not. This is so that trailing optional
+% arguments are not picked up \enquote{by accident} in input.
+\TeX{} 会在函数名之后寻找第一个选项，无论中间是否有空格，对于必选项和可选项都是如此。
+比如 |\foo[arg]| 和 \verb*|\foo   [arg]| 就是等价的。
+不仅如此，实际上直到最后一个必选项之前，空格都会忽略。
+例如，使用如下定义后
+\begin{verbatim}
+    \NewDocumentCommand \foo { m o m } { ... }
+\end{verbatim}
+用户输入 |\foo{arg1}[arg2]{arg3}| 和 \verb*|\foo{arg1}  [arg2]   {arg3}| 效果是相同的。
+然而，在最后一个必选项之后如果还有可选项的话，其间的空格则\emph{不}会忽略。
+例如，使用如下定义
+\begin{verbatim}
+    \NewDocumentCommand \foobar { m o } { ... }
+\end{verbatim}
+那么 |\foobar{arg1}[arg2]| 会使用可选项但是 \verb*|\foobar{arg1} [arg2]| 则没有可选项。
+
+%
+% There is one major exception to the rules listed above: when
+% \pkg{xparse} is used to define what \TeX\ defines as \enquote{control
+% symbols} in which the function name is made up of a single character,
+% such as \enquote{\cmd{\\}}, spaces are \emph{not} ignored directly
+% after them even for mandatory arguments.
+以上的规则还有一个主要的例外情况：
+如果使用 \pkg{xparse} 定义的是 \TeX{} 中的“控制符号”，即函数名由单字符组成（比如 \cmd{\\}），
+那么即便该函数有必选项空格也不会忽略。
+
+%
+% \subsection{Required delimited arguments}
+\section{必须定界的选项}
+
+%
+% The contrast between a delimited (\texttt{D}-type) and \enquote{required
+% delimited} (\texttt{R}-type) argument is that an error will be raised if
+% the latter is missing. Thus for example
+% \begin{verbatim}
+%   \NewDocumentCommand {\foobaz} {r()m} {}
+%   \foobaz{oops}
+% \end{verbatim}
+% will lead to an error message being issued. The marker |-NoValue-|
+% (\texttt{r}-type) or user-specified default (for \texttt{R}-type) will be
+% inserted to allow error recovery.
+定界选项（\texttt{D} 类型）和“必须定界”选项（\texttt{R} 类型）的区别是，后者缺失时会报错。
+例如
+\begin{verbatim}
+    \NewDocumentCommand {\foobaz} {r()m} {}
+    \foobaz{oops}
+\end{verbatim}
+会导致生成错误信息。
+其中会插入标记 |-NoValue-|（\texttt{r} 类型）或者用户指定的缺省值（对于 \texttt{R} 而言）以帮助纠错。
+
+%
+% Users should note that support for required delimited arguments is somewhat
+% experimental. Feedback is therefore very welcome on the \texttt{LaTeX-L}
+% mailing list.
+用户需要注意，对于必须定界选项的支持还处于一定的实验性质阶段。
+因此十分欢迎在 \href{http://news.gmane.org/group/gmane.comp.tex.latex.latex3}{LaTeX-L} 邮件列表上进行反馈。
+
+%
+% \subsection{Verbatim arguments}
+\section{抄录选项}
+
+%
+% Arguments of type~\texttt{v} are read in verbatim mode, which will
+% result in the grabbed argument consisting of tokens of category codes
+% $12$~(\enquote{other}) and $13$~(\enquote{active}), except spaces,
+% which are given category code $10$~(\enquote{space}). The argument is
+% delimited in a similar manner to the \LaTeXe{} \cs{verb} function, or
+% by (correctly nested) pairs of braces.
+类型 \texttt{v} 的选项读取时会进入抄录模式，因此选项内容会进行转义。
+其中空格的类代码为 $10$ （空格符），而其它记号的类代码为 $12$ （其它符号）或者 $13$ （活动符）。
+选项的定界方式可以类似于 \LaTeXe{} 的 \cs{verb} 函数，
+也可以使用成对的大括号。
+
+%
+% Functions containing verbatim arguments cannot appear in the arguments
+% of other functions. The \texttt{v}~argument specifier includes code to check
+% this, and will raise an error if the grabbed argument has already been
+% tokenized by \TeX{} in an irreversible way.
+包含抄录选项的函数不能作为其它函数的选项内。
+指示符 \texttt{v} 背后的代码会为此进行检查。
+因此，如果 \TeX{} 已经用不可逆的方式对选项内容进行了符号化，
+那么则会报错。
+
+%
+% By default, an argument of type~\texttt{v} must be at most one line.
+% Prefixing with \texttt{+} allows line breaks within the argument.
+默认情况下 \texttt{v} 类型的选项必须在一行内。
+如果选项加了前缀 \texttt{+} 那么可以换行。
+
+%
+% Users should note that support for verbatim arguments is somewhat
+% experimental. Feedback is therefore very welcome on the \texttt{LaTeX-L}
+% mailing list.
+用户需要注意，对于必须定界选项的支持还处于一定的实验性质阶段。
+因此十分欢迎在 \href{http://news.gmane.org/group/gmane.comp.tex.latex.latex3}{LaTeX-L} 邮件列表上进行反馈。
+
+%
+% \subsection{Default values of arguments}
+\section{选项的默认值}
+
+%
+% Uppercase argument types (\texttt{O}, \texttt{D}, \ldots{}) allow to
+% specify a default value to be used when the argument is missing; their
+% lower-case counterparts use the special marker |-NoValue-|.  The
+% default value can be expressed in terms of the value of any other
+% arguments by using |#1|, |#2|, and so on.
+% \begin{verbatim}
+%   \NewDocumentCommand {\conjugate} { m O{#1ed} O{#2} } {(#1,#2,#3)}
+%   \conjugate {walk}            % => (walk,walked,walked)
+%   \conjugate {find} [found]    % => (find,found,found)
+%   \conjugate {do} [did] [done] % => (do,did,done)
+% \end{verbatim}
+% The default values may refer to arguments that appear later in the
+% argument specification.  For instance a command could accept two
+% optional arguments, equal by default:
+% \begin{verbatim}
+%   \NewDocumentCommand {\margins} { O{#3} m O{#1} m } {(#1,#2,#3,#4)}
+%   \margins {a} {b}              % => {(-NoValue-,a,-NoValue-,b)}
+%   \margins [1cm] {a} {b}        % => {(1cm,a,1cm,b)}
+%   \margins {a} [1cm] {b}        % => {(1cm,a,1cm,b)}
+%   \margins [1cm] {a} [2cm] {b}  % => {(1cm,a,2cm,b)}
+% \end{verbatim}
+大写的选项类型（\texttt{O}, \texttt{D}, \ldots{}）可以为选项缺失的情形指定缺省值；
+而相对应的小写类型则使用特殊标记 |-NoValue-|。
+此外，也可以通过 |#1|、|#2| 这样的方式将选项的缺省值设为其它选项的值。
+例如
+\begin{verbatim}
+    \NewDocumentCommand {\conjugate} { m O{#1ed} O{#2} } {(#1,#2,#3)}
+    \conjugate {walk}            % => (walk,walked,walked)
+    \conjugate {find} [found]    % => (find,found,found)
+    \conjugate {do} [did] [done] % => (do,did,done)
+\end{verbatim}
+缺省值可以涉及到选项规范中之后出现的选项。
+例如，某个命令可以接受两个可选项，并且默认情况下是相同的：
+\begin{verbatim}
+    \NewDocumentCommand {\margins} { O{#3} m O{#1} m } {(#1,#2,#3,#4)}
+    \margins {a} {b}              % => {(-NoValue-,a,-NoValue-,b)}
+    \margins [1cm] {a} {b}        % => {(1cm,a,1cm,b)}
+    \margins {a} [1cm] {b}        % => {(1cm,a,1cm,b)}
+    \margins [1cm] {a} [2cm] {b}  % => {(1cm,a,2cm,b)}
+\end{verbatim}
+
+%
+% Users should note that support for default arguments referring to
+% other arguments is somewhat experimental. Feedback is therefore very
+% welcome on the \texttt{LaTeX-L} mailing list.
+用户需要注意，对于以其它选项作为缺省值这一功能的支持还处于一定的实验性质阶段。
+因此十分欢迎在 \href{http://news.gmane.org/group/gmane.comp.tex.latex.latex3}{LaTeX-L} 邮件列表上进行反馈。
+
+%
+% \subsection{Default values for \enquote{embellishments}}
+% \label{sec:embellishment}
+\section{“装饰符”的默认值}
+\label{sec:embellishment}
+
+%
+% The \texttt{E}-type argument allows one default value per test character.
+% This is achieved by giving a list of defaults for each entry in the
+% list, for example:
+% \begin{verbatim}
+%   E{^_}{{UP}{DOWN}}
+% \end{verbatim}
+% If the list of default values is \emph{shorter} than the list of test characters,
+% the special |-NoValue-| marker will be returned (as for the \texttt{e}-type
+% argument). Thus for example
+% \begin{verbatim}
+%   E{^_}{{UP}}
+% \end{verbatim}
+% has default \texttt{UP} for the |^| test character, but will return the
+% |-NoValue-| marker as a default for |_|. This allows mixing of explicit
+% defaults with testing for missing values.
+\texttt{E} 类型选项可以允许每一测试字符都有默认值。
+具体方法是对于序列中的每一条目都给出默认值。例如：
+\begin{verbatim}
+    E{^_}{{UP}{DOWN}}
+\end{verbatim}
+如果默认值列表的长度比测试字符列表\emph{短}，
+那么将会返回特殊标记 |-NoValue-|（与 \texttt{e} 类型选项相同）。
+例如
+\begin{verbatim}
+    E{^_}{{UP}}
+\end{verbatim}
+对于测试字符 |^| 会返回 \texttt{UP}，而对于 |_| 则返回默认的 |-NoValue-| 标记。
+使用这种方式可以同时进行缺失值测试和显式的默认值指定。
+
+%
+% \subsection{Declaring commands and environments}
+\section{声明命令和环境}
+
+%
+% With the concept of an argument specifier defined, it is now
+% possible to describe the methods available for creating both
+% functions and environments using \pkg{xparse}.
+有了选项规范定义的概念，现在就可以描述使用 \pkg{xparse} 创建函数和环境的具体方法了。
+
+%
+% The interface-building commands are the preferred method for
+% creating document-level functions in \LaTeX3. All of the functions
+% generated in this way are naturally robust (using the \eTeX{}
+% \cs{protected} mechanism).
+
+接口命令是在 \LaTeX3 中创建文档水平函数的首选方法。
+所有用这种方式生成的函数都自然是鲁棒的（使用了 \eTeX{} 的 \cs{protected} 机制）。
+
+%
+% \begin{function}
+%   {
+%     \NewDocumentCommand     ,
+%     \RenewDocumentCommand   ,
+%     \ProvideDocumentCommand ,
+%     \DeclareDocumentCommand
+%   }
+%   \begin{syntax}
+%     \cs{NewDocumentCommand} \meta{Function} \Arg{arg spec} \Arg{code}
+%   \end{syntax}
+%   This family of commands are used to create a document-level
+%   \meta{function}. The argument specification for the function is
+%   given by \meta{arg spec},  and expanding
+%   to be replaced by the \meta{code}.
+% \end{function}
+\begin{function}
+    {
+             \NewDocumentCommand     ,
+             \RenewDocumentCommand   ,
+             \ProvideDocumentCommand ,
+             \DeclareDocumentCommand
+    }
+    \begin{syntax}
+        \cs{NewDocumentCommand} \meta{函数Function} \Arg{选项规范arg spec} \Arg{代码code}
+    \end{syntax}
+    这一组函数用于创建文档水平的\meta{函数 function}。
+    该函数的选项规范由 \meta{arg spec} 给出，
+    然后展开为 \meta{code}。
+\end{function}
+
+%
+%   As an example:
+以下是一个例子：
+\begin{verbatim}
+    \NewDocumentCommand \chapter { s o m }
+        {
+            \IfBooleanTF {#1}
+                { \typesetstarchapter {#3} }
+                { \typesetnormalchapter {#2} {#3} }
+        }
+\end{verbatim}
+%   would be a way to define a \cs{chapter} command which would
+%   essentially behave like the current \LaTeXe{} command (except that it
+%   would accept an optional argument even when a \texttt{*} was parsed).
+%   The \cs{typesetnormalchapter} could test its first argument for being
+%   |-NoValue-| to see if an optional argument was present.
+这段代码定义了 \cs{chapter} 命令，本质上处理机制与当前 \LaTeXe{} 的同名命令是类似的
+（不同之处仅在于即便有 \texttt{*} 也可以有可选项）。
+命令 \cs{typesetnormalchapter}  会检测第一个选项是否为 |-NoValue-| 以判断是否有可选项。
+
+%
+%   The difference between the \cs{New\ldots} \cs{Renew\ldots},
+%   \cs{Provide\ldots} and \cs{Declare\ldots} versions is the behaviour
+%   if \meta{function} is already defined.
+\cs{New\ldots}, \cs{Renew\ldots}, \cs{Provide\ldots}, \cs{Declare\ldots} 
+这些版本之间的区别在于 \meta{函数function} 是否已经有定义。
+%   \begin{itemize}
+%    \item \cs{NewDocumentCommand} will issue an error if \meta{function}
+%      has already been defined.
+%    \item \cs{RenewDocumentCommand} will issue an error if \meta{function}
+%      has not previously been defined.
+%    \item \cs{ProvideDocumentCommand} creates a new definition for
+%      \meta{function} only if one has not already been given.
+%     \item \cs{DeclareDocumentCommand} will always create the new
+%       definition, irrespective of any existing \meta{function} with the
+%       same name.  This should be used sparingly.
+%   \end{itemize}
+\begin{itemize}
+    \item 如果 \meta{function} 已经有定义，那么 \cs{NewDocumentCommand} 会报错。
+    \item 如果 \meta{function} 尚未定义，那么 \cs{ReNewDocumentCommand} 会报错。
+    \item 只有当  \meta{function} 尚未定义时，\cs{ProvideDocumentCommand} 才会为其创建新的定义。
+    \item \cs{DeclareDocumentCommand} 总是会创建新定义，
+    不管当前 \meta{function} 是否存在。该命令使用时应当注意克制。
+\end{itemize}
+
+%
+%   \begin{texnote}
+%      Unlike \LaTeXe{}'s \cs{newcommand} and relatives, the
+%      \cs{NewDocumentCommand} family of functions do not prevent creation of
+%      functions with names starting \cs{end\ldots}.
+%   \end{texnote}
+\begin{texnote}
+    与 \LaTeXe{} 的 \cs{newcommand} 系列不同的是，
+    \cs{NewDocumentCommand} 系列不会阻止创建以 \cs{end\ldots} 作为开头的函数。
+\end{texnote}
+
+%
+\begin{function}
+%   {
+%     \NewDocumentEnvironment     ,
+%     \RenewDocumentEnvironment   ,
+%     \ProvideDocumentEnvironment ,
+%     \DeclareDocumentEnvironment
+%   }
+%   \begin{syntax}
+%     \cs{NewDocumentEnvironment} \Arg{environment} \Arg{arg spec}
+%     ~~\Arg{start code} \Arg{end code}
+%   \end{syntax}
+    {
+        \NewDocumentEnvironment     ,
+        \RenewDocumentEnvironment   ,
+        \ProvideDocumentEnvironment ,
+        \DeclareDocumentEnvironment
+    }
+    \begin{syntax}
+        \cs{NewDocumentEnvironment} \Arg{环境environment} \Arg{选项规范arg spec}
+        ~~\Arg{开始代码start code} \Arg{结束代码end code}
+    \end{syntax}
+    这些命令创建环境（\cs{begin}\Arg{environment} \ldots{} \cs{end}\Arg{environment}），
+    其工作原理与 \cs{NewDocumentCommand} 系列相同。
+    其中，\meta{start code} 和 \meta{end code} 都可以接受由  \meta{arg spec} 定义的选项。
+    这些选项在 \cs{begin}\Arg{environment} 之后给出。
+%   These commands work in the same way as \cs{NewDocumentCommand},
+%   etc.\@, but create environments (\cs{begin}\Arg{environment} \ldots{}
+%   \cs{end}\Arg{environment}). Both the \meta{start code} and
+%   \meta{end code}
+%   may access the arguments as defined by \meta{arg spec}.
+%   The arguments will be given following \cs{begin}\Arg{environment}.
+\end{function}
+
+%
+% \subsection{Testing special values}
+\section{特殊值的测试}
+
+%
+% Optional arguments created using \pkg{xparse} make use of dedicated
+% variables to return information about the nature of the argument
+% received.
+使用 \pkg{xparse} 创建的可选项利用专门设计的变量来返回关于接收选项的属性信息。
+
+%
+\begin{function}[EXP]{\IfNoValueT, \IfNoValueF, \IfNoValueTF}
+%   \begin{syntax}
+%     \cs{IfNoValueTF} \Arg{argument} \Arg{true code} \Arg{false code}
+%     \cs{IfNoValueT} \Arg{argument} \Arg{true code}
+%     \cs{IfNoValueF} \Arg{argument} \Arg{false code}
+%   \end{syntax}
+\begin{syntax}
+    \cs{IfNoValueTF} \Arg{选项argument} \Arg{真值代码true code} \Arg{假值代码false code}
+    \cs{IfNoValueT} \Arg{选项argument} \Arg{真值代码true code}
+    \cs{IfNoValueF} \Arg{选项argument} \Arg{假值代码false code}
+\end{syntax}
+%   The \cs{IfNoValue(TF)} tests are used to check if \meta{argument} (|#1|,
+%   |#2|, \emph{etc.}) is the special |-NoValue-| marker For example
+%   \begin{verbatim}
+%     \NewDocumentCommand \foo { o m }
+%       {
+%         \IfNoValueTF {#1}
+%           { \DoSomethingJustWithMandatoryArgument {#2} }
+%           {  \DoSomethingWithBothArguments {#1} {#2}   }
+%       }
+%   \end{verbatim}
+%   will use a different internal function if the optional argument
+%   is given than if it is not present.
+测试 \cs{IfNoValue(TF)} 用于检查 \meta{argument}（|#1|、|#2|等）是否为特殊标记 |-NoValue-|。例如：
+\begin{verbatim}
+    \NewDocumentCommand \foo { o m }
+        {
+            \IfNoValueTF {#1}
+                { \DoSomethingJustWithMandatoryArgument {#2} }
+                {  \DoSomethingWithBothArguments {#1} {#2}   }
+        }
+\end{verbatim}
+
+%
+%   Note that three tests are available, depending on which outcome
+%   branches are required: \cs{IfNoValueTF}, \cs{IfNoValueT} and
+%   \cs{IfNoValueF}.
+要注意的是，根据判断分支结果的需求，这里提供了三个测试：
+\cs{IfNoValueTF}, \cs{IfNoValueT} 和 \cs{IfNoValueF}。
+
+%
+%   As the \cs{IfNoValue(TF)} tests are expandable, it is possible to
+%   test these values later, for example at the point of typesetting or
+%   in an expansion context.
+由于 \cs{IfNoValue(TF)} 测试是可展开的，因此对于值的测试可以延时进行，
+比如在排版时或者在展开的文本中进行。
+
+%
+%   It is important to note that |-NoValue-| is constructed such that it
+%   will \emph{not} match the simple text input |-NoValue-|, \emph{i.e.}
+%   that
+%   \begin{verbatim}
+%     \IfNoValueTF{-NoValue-}
+%   \end{verbatim}
+%   will be logically \texttt{false}.
+另外要着重指出的是，这里 |-NoValue-| 的构建方式保证其\emph{不会}匹配简单的文本输入 |-NoValue-|，即
+\begin{verbatim}
+    \IfNoValueTF{-NoValue-}
+\end{verbatim}
+判断结果为 \texttt{false}。
+
+%
+%   When two optional arguments follow each other (a syntax we typically
+%   discourage), it can make sense to allow users of the command to
+%   specify only the second argument by providing an empty first
+%   argument.  Rather than testing separately for emptyness and for
+%   |-NoValue-| it is then best to use the argument type~|O| with an
+%   empty default value, and simply test for emptyness using the
+%   \pkg{expl3} conditional \cs{tl_if_blank:nTF} or its \pkg{etoolbox}
+%   analogue \tn{ifblank}.
+当有两个连续的可选项时（我们不鼓励这种语法），
+用户可以将第一个选项设为空而只给出第二个选项。
+此时可以分别检查选项是否为空以及是否为 |-NoValue-|，
+但更好的方法是使用选项类型 |O| 并将缺省值设为空，
+并直接使用 \pkg{expl3} 的条件命令 \cs{tl_if_blank:nTF} 或者 \pkg{etoolbox} 中的版本 \tn{ifblank} 检查是否为空。
+\end{function}
+
+%
+\begin{function}[EXP]{\IfValueT, \IfValueF, \IfValueTF}
+%   \begin{syntax}
+%     \cs{IfValueTF} \Arg{argument} \Arg{true code} \Arg{false code}
+%    \end{syntax}
+\begin{syntax}
+    \cs{IfValueTF} \Arg{选项argument} \Arg{真值代码true code} \Arg{假值代码false code}
+\end{syntax}
+%   The reverse form of the \cs{IfNoValue(TF)} tests are also available
+%   as \cs{IfValue(TF)}. The context will determine which logical
+%   form makes the most sense for a given code scenario.
+与 \cs{IfNoValue(TF)} 结果相反的测试命令也是有的，即 \cs{IfValue(TF)}。
+实际语境会决定在代码中哪一种逻辑形式是最有意义的。
+\end{function}
+
+%
+% \begin{variable}{\BooleanFalse, \BooleanTrue}
+%   The \texttt{true} and \texttt{false} flags set when searching for
+%   an optional character (using \texttt{s} or \texttt{t\meta{char}}) have
+%   names which are accessible outside of code blocks.
+% \end{variable}
+\begin{variable}{\BooleanFalse, \BooleanTrue}
+    当搜索可选字符时（使用 \texttt{s} 和 \texttt{t\meta{char}}）设置的 \texttt{true} 和 \texttt{false} 标志，
+    这样该变量名可以在代码块之外获取。
+\end{variable}
+
+%
+\begin{function}[EXP]{\IfBooleanT, \IfBooleanF, \IfBooleanTF}
+%   \begin{syntax}
+%     \cs{IfBooleanTF} \meta{argument} \Arg{true code} \Arg{false code}
+%   \end{syntax}
+\begin{syntax}
+    \cs{IfBooleanTF} \meta{选项argument} \Arg{真值代码true code} \Arg{假值代码false code}
+\end{syntax}
+%   Used to test if \meta{argument} (|#1|, |#2|, \emph{etc.}) is
+%   \cs{BooleanTrue} or \cs{BooleanFalse}. For example
+%   \begin{verbatim}
+%     \NewDocumentCommand \foo { s m }
+%       {
+%         \IfBooleanTF #1
+%           { \DoSomethingWithStar {#2} }
+%           { \DoSomethingWithoutStar {#2} }
+%       }
+%   \end{verbatim}
+%   checks for a star as the first argument, then chooses the action to
+%   take based on this information.
+用于测试 \meta{argument}（|#1|, |#2| 等）是否为 \cs{BooleanTrue} 或 \cs{BooleanFalse}。例如
+\begin{verbatim}
+    \NewDocumentCommand \foo { s m }
+        {
+            \IfBooleanTF #1
+                { \DoSomethingWithStar {#2} }
+                { \DoSomethingWithoutStar {#2} }
+        }
+\end{verbatim}
+\end{function}
+
+%
+% \subsection{Argument processors}
+% \label{sec:processors}
+\section{选项处理器}
+\label{sec:processors}
+
+%
+% \pkg{xparse} introduces the idea of an argument processor, which is
+% applied to an argument \emph{after} it has been grabbed by the
+% underlying system but before it is passed to \meta{code}. An argument
+% processor can therefore be used to regularise input at an early stage,
+% allowing the internal functions to be completely independent of input
+% form. Processors are applied to user input and to default values for
+% optional arguments, but \emph{not} to the special |-NoValue-| marker.
+\pkg{xparse} 引入了选项处理器的概念，
+可以在底层系统收集选项\emph{之后}但是尚未传递给 \meta{code} 时作用在选项上。
+因此，选项处理器可以用于在早期调整输入，
+这样内部函数就可以完全独立于输入形式。
+选项处理器作用于用户输入以及可选项的缺省值上，但不会作用于特殊标记 |-NoValue-|。
+
+%
+% Each argument processor is specified by the syntax
+% \texttt{>}\marg{processor} in the argument specification. Processors
+% are applied from right to left, so that
+每一个选项处理器都通过选项规范中的语法 \texttt{>}\marg{processor} 来指定，
+然后从右到左依次执行，因此
+% \begin{verbatim}
+%   >{\ProcessorB} >{\ProcessorA} m
+% \end{verbatim}
+\begin{verbatim}
+    >{\ProcessorB} >{\ProcessorA} m
+\end{verbatim}
+% would apply \cs{ProcessorA}
+% followed by \cs{ProcessorB} to the tokens grabbed by the \texttt{m}
+% argument.
+会先将 \cs{ProcessorA} 作用在 \texttt{m} 选项收集的记号上，然后再将 \cs{ProcessorB} 作用上去。
+
+%
+\begin{variable}{\ProcessedArgument}
+%   \pkg{xparse} defines a very small set of processor functions. In the
+%   main, it is anticipated that code writers will want to create their
+%   own processors. These need to accept one argument, which is the
+%   tokens as grabbed (or as returned by a previous processor function).
+%   Processor functions should return the processed argument as the
+%   variable \cs{ProcessedArgument}.
+\pkg{xparse} 定义了一个非常小的处理器函数集合。
+当然，可以预见代码作者会希望创建自己的选项处理器。
+这需要将收集上来的（或者由之前的处理器函数返回的）记号作为选项。
+因此，处理器函数应当返回被处理的选项，这就是 \cs{ProcessedArgument} 变量。
+\end{variable}
+
+%
+\begin{function}{\ReverseBoolean}
+\begin{syntax}
+    \cs{ReverseBoolean}
+\end{syntax}
+%   This processor reverses the logic of \cs{BooleanTrue} and
+%   \cs{BooleanFalse}, so that the example from earlier would become
+该处理器将反转 \cs{BooleanTrue} 和 \cs{BooleanFalse} 的逻辑值，
+因此之前的例子会变成：
+%   \begin{verbatim}
+%     \NewDocumentCommand \foo { > { \ReverseBoolean } s m }
+%       {
+%         \IfBooleanTF #1
+%           { \DoSomethingWithoutStar {#2} }
+%           { \DoSomethingWithStar {#2} }
+%       }
+%   \end{verbatim}
+\begin{verbatim}
+    \NewDocumentCommand \foo { > { \ReverseBoolean } s m }
+        {
+            \IfBooleanTF #1
+                { \DoSomethingWithoutStar {#2} }
+                { \DoSomethingWithStar {#2} }
+        }
+\end{verbatim}
+\end{function}
+
+%
+\begin{function}[updated = 2012-02-12]{\SplitArgument}
+%   \begin{syntax}
+%     \cs{SplitArgument} \Arg{number} \Arg{token}
+%   \end{syntax}
+\begin{syntax}
+    \cs{SplitArgument} \Arg{数量number} \Arg{记号token}
+\end{syntax}
+%   This processor splits the argument given at each occurrence of the
+%   \meta{token} up to a maximum of \meta{number} tokens (thus
+%   dividing the input into $\text{\meta{number}} + 1$ parts).
+%   An error is given if too many \meta{tokens} are present in the
+%   input. The processed input is placed inside
+%   $\text{\meta{number}} + 1$ sets of braces for further use.
+%   If there are fewer than \Arg{number} of \Arg{tokens} in the argument
+%   then |-NoValue-| markers are added at the end of the processed
+%   argument.
+该处理器会将选项按照 \meta{token} 的出现位置进行分割，
+并且最多有 \meta{number} 个记号（因此输入的选项分成了  $\text{\meta{number}} + 1$ 个部分）。
+如果选项输入中有过多数量的 \meta{token} 那么会报错。
+处理后的输入会放在 $\text{\meta{number}} + 1$ 个大括号集合中供进一步使用。
+如果选项中 \Arg{token} 的数量小于 \Arg{number}，
+那么会在处理后的选项末尾加上合适数量的 |-NoValue-|。
+%   \begin{verbatim}
+%     \NewDocumentCommand \foo
+%       { > { \SplitArgument { 2 } { ; } } m }
+%       { \InternalFunctionOfThreeArguments #1 }
+%   \end{verbatim}
+\begin{verbatim}
+    \NewDocumentCommand \foo
+        { > { \SplitArgument { 2 } { ; } } m }
+        { \InternalFunctionOfThreeArguments #1 }
+\end{verbatim}
+%   Any category code $13$ (active) \meta{tokens} will be replaced
+%   before the split takes place. Spaces are trimmed at each end of each
+%   item parsed.
+在分割进行之前任何类代码为 $13$ （活动符）的 \meta{token} 都会被代替。
+每一项两端的空格都会被删去。
+\end{function}
+
+%
+\begin{function}{\SplitList}
+%   \begin{syntax}
+%     \cs{SplitList} \Arg{token(s)}
+%   \end{syntax}
+\begin{syntax}
+    \cs{SplitList} \Arg{记号token(s)}
+\end{syntax}
+%   This processor splits the argument given at each occurrence of the
+%   \meta{token(s)} where the number of items is not fixed. Each item is
+%   then wrapped in braces within |#1|. The result is that the
+%   processed argument can be further processed using a mapping function.
+该处理器会将选项按照 \meta{token(s)} 进行分割，分割的项目数量不限。
+然后每一项都会包裹在 |#1| 中的大括号内。
+处理后的选项可以进一步使用映射函数进行处理。
+%   \begin{verbatim}
+%     \NewDocumentCommand \foo
+%       { > { \SplitList { ; } } m }
+%       { \MappingFunction #1 }
+%   \end{verbatim}
+\begin{verbatim}
+    \NewDocumentCommand \foo
+        { > { \SplitList { ; } } m }
+        { \MappingFunction #1 }
+\end{verbatim}
+%   If only a single \meta{token} is used for the split, any
+%   category code $13$ (active) \meta{token} will be replaced
+%   before the split takes place.
+如果只用一个 \meta{token} 进行分割，
+那么在分割进行之前任何类代码为 $13$ （活动符）的 \meta{token} 都会被代替。
+\end{function}
+
+%
+\begin{function}[EXP]{\ProcessList}
+%   \begin{syntax}
+%     \cs{ProcessList} \Arg{list} \Arg{function}
+%   \end{syntax}
+\begin{syntax}
+    \cs{ProcessList} \Arg{列表list} \Arg{函数function}
+\end{syntax}
+%   To support \cs{SplitList}, the function \cs{ProcessList} is available
+%   to apply a \meta{function} to every entry in a \meta{list}. The
+%   \meta{function} should absorb one argument: the list entry. For example
+为了支持 \cs{SplitList}，
+这里提供了函数 \cs{ProcessList} 可以将一个函数 \meta{function} 作用到 \meta{list} 的每一条目上。
+函数 \meta{function} 应当吸收列表条目作为选项。例如
+%   \begin{verbatim}
+%     \NewDocumentCommand \foo
+%       { > { \SplitList { ; } } m }
+%       { \ProcessList {#1} { \SomeDocumentFunction } }
+%   \end{verbatim}
+\begin{verbatim}
+    \NewDocumentCommand \foo
+        { > { \SplitList { ; } } m }
+        { \ProcessList {#1} { \SomeDocumentFunction } }
+\end{verbatim}
+
+%
+%   \textbf{This function is experimental.}
+\textbf{该函数是实验性质的。}
+\end{function}
+
+%
+\begin{function}{\TrimSpaces}
+\begin{syntax}
+    \cs{TrimSpaces}
+\end{syntax}
+%   Removes any leading and trailing spaces (tokens with character code~$32$
+%   and category code~$10$) for the ends of the argument. Thus for example
+%   declaring a function
+删除任何选项两端（开头和结尾）的空格（类代码为 $32$ 和 $10$ 的记号）。
+例如，声明如下函数
+%   \begin{verbatim}
+%     \NewDocumentCommand \foo
+%       { > { \TrimSpaces } m }
+%       { \showtokens {#1} }
+%   \end{verbatim}
+\begin{verbatim}
+    \NewDocumentCommand \foo
+        { > { \TrimSpaces } m }
+        { \showtokens {#1} }
+\end{verbatim}
+%   and using it in a document as
+并在文档中使用如下命令
+%   \begin{verbatim}
+%     \foo{ hello world }
+%   \end{verbatim}
+\begin{verbatim}
+    \foo{ hello world }
+\end{verbatim}
+%   will show \texttt{hello world} at the terminal, with the space at each
+%   end removed. \cs{TrimSpaces} will remove multiple spaces from the ends of
+%   the input in cases where these have been included such that the standard
+%   \TeX{} conversion of multiple spaces to a single space does not apply.
+会在终端显示 \texttt{hello world}，两端的空格都会删除。
+当输入的内容已经导入时，就不能应用标准 \TeX{} 将多个空格转成单个空格的机制，
+此时 \cs{TrimSpaces} 会删除多重空格。
+
+%
+%   \textbf{This function is experimental.}
+\textbf{该函数是实验性质的。}
+\end{function}
+
+%
+% \subsection{Fully-expandable document commands}
+\section{完全展开的文档命令}
+
+%
+% There are \emph{very rare} occasion when it may be useful to create
+% functions using a fully-expandable argument grabber. To support this,
+% \pkg{xparse} can create expandable functions as well as the usual
+% robust ones. This imposes a number of restrictions on the nature of
+% the arguments accepted by a function, and the code it implements.
+% This facility should only be used when \emph{absolutely necessary};
+% if you do not understand when this might be, \emph{do not use these
+% functions}!
+在极少数情况下，使用完全展开的选项收集器创建函数会更有效。
+除了常规的鲁棒函数，\pkg{xparse} 也提供了对创建可展开函数的支持。
+这对函数接受的选项属性以及实现的代码提出了许多限制。
+因此只有当\emph{绝对需要}时才应该使用该功能。
+如果你不清楚是否必要，\emph{那么不要使用这些函数}！
+
+%
+\begin{function}
+{
+    \NewExpandableDocumentCommand     ,
+    \RenewExpandableDocumentCommand   ,
+    \ProvideExpandableDocumentCommand ,
+    \DeclareExpandableDocumentCommand
+}
+%   \begin{syntax}
+%     \cs{NewExpandableDocumentCommand}
+%     ~~~~\meta{function} \Arg{arg spec} \Arg{code}
+%   \end{syntax}
+\begin{syntax}
+    \cs{NewExpandableDocumentCommand}
+    ~~~~\meta{函数function} \Arg{选项规范arg spec} \Arg{代码code}
+\end{syntax}
+%   This family of commands is used to create a document-level \meta{function},
+%   which will grab its arguments in a fully-expandable manner. The
+%   argument specification for the function is given by \meta{arg spec},
+%   and the function will execute \meta{code}. In  general, \meta{code} will
+%   also be fully expandable, although it is possible that this will
+%   not be the case (for example, a function for use in a table might
+%   expand so that \cs{omit} is the first non-expandable non-space token).
+这组函数创建的文档水平 \meta{function} 会按照完全展开的方式收集选项。
+函数的选项规范由 \meta{arg spec} 给出，然后会执行 \meta{code}。
+一般而言，\meta{code} 也是完全展开的，尽管例外情况也是可以的
+（例如，表格中使用的函数展开时，可以将 \cs{omit} 作为第一个不展开的非空格记号）。
+
+%
+%   Parsing arguments expandably imposes a number of restrictions on
+%   both the type of arguments that can be read and the error checking
+%   available:
+解析选项就进行展开有很多限制条件，比如读取的选项类型和可用的错误检查：
+\begin{itemize}
+%     \item The last argument (if any are present) must be one of the
+%       mandatory types \texttt{m} or \texttt{r}.
+\item 最后一个选项（如果有的话）必须是必选项且类型为 \texttt{m} 或 \texttt{r}。
+%     \item All short arguments appear before long arguments.
+\item 所有的段内（short）选项必须出现在段间（long）选项之前。
+%     \item The mandatory argument types \texttt{l} and \texttt{u} may
+%       not be used after optional arguments.
+\item 必选项类型 \texttt{l} 和 \texttt{u} 不可以用在可选项之后。
+%     \item The optional argument types \texttt{g}
+%       and \texttt{G} are not available.
+\item 可选项类型 \texttt{g} 和 \texttt{G} 不可用。
+%     \item The \enquote{verbatim} argument type \texttt{v} is not available.
+\item “抄录”选项类型 \texttt{v} 不可用。
+%     \item Argument processors (using \texttt{>}) are not available.
+\item 选项处理器（使用 \texttt{>}）不可用。
+%     \item It is not possible to differentiate between, for example
+%       |\foo[| and |\foo{[}|: in both cases the \texttt{[} will be
+%       interpreted as the start of an optional argument. As a
+%       result, checking for optional arguments is less robust than
+%       in the standard version.
+\item 不能区分一些情况，比如 |\foo[| 和 |\foo{[}|：
+在这两种情况下 \texttt{[} 都被解释为可选项的开始。
+因此，对于可选项的检查没有标准情形时那么鲁棒。
+\end{itemize}
+%   \pkg{xparse} will issue an error if an argument specifier is given
+%   which does not conform to the first six requirements. The last
+%   item is an issue when the function is used, and so is beyond the
+%   scope of \pkg{xparse} itself.
+如果给出的选项指示符不符合前六项要求，\pkg{xparse} 会报错。
+最后一项是关于函数何时使用的，所以已经超出了 \pkg{xparse} 本身的范畴。
+\end{function}
+
+%
+% \subsection{Access to the argument specification}
+\section{获取选项规范}
+%
+% The argument specifications for document commands and environments are
+% available for examination and use.
+文档命令和环境的选项规范可以用于检查使用。
+
+%
+\begin{function}{\GetDocumentCommandArgSpec, \GetDocumentEnvironmentArgSpec}
+%   \begin{syntax}
+%     \cs{GetDocumentCommandArgSpec} \meta{function}
+%     \cs{GetDocumentEnvironmentArgSpec} \meta{environment}
+%   \end{syntax}
+\begin{syntax}
+    \cs{GetDocumentCommandArgSpec} \meta{函数function}
+    \cs{GetDocumentEnvironmentArgSpec} \meta{环境environment}
+\end{syntax}
+%   These functions transfer the current argument specification for the
+%   requested \meta{function} or \meta{environment} into the token list
+%   variable \cs{ArgumentSpecification}. If the \meta{function} or
+%   \meta{environment} has no known argument specification then an error
+%   is issued. The assignment to \cs{ArgumentSpecification} is local to
+%   the current \TeX{} group.
+这两个函数将 \meta{function} 或 \meta{environment} 的当前选项规范转到记号列表变量 \cs{ArgumentSpecification}。
+如果 \meta{function} 或 \meta{environment} 有未知选项规范那么会报错。
+\cs{ArgumentSpecification} 的赋值是在当前 \TeX{} 组内局部的。
+\end{function}
+
+%
+\begin{function}
+{\ShowDocumentCommandArgSpec,  \ShowDocumentEnvironmentArgSpec}
+%   \begin{syntax}
+%     \cs{ShowDocumentCommandArgSpec} \meta{function}
+%     \cs{ShowDocumentEnvironmentArgSpec} \meta{environment}
+%   \end{syntax}
+\begin{syntax}
+    \cs{ShowDocumentCommandArgSpec} \meta{函数function}
+    \cs{ShowDocumentEnvironmentArgSpec} \meta{环境environment}
+\end{syntax}
+%   These functions show the current argument specification for the
+%   requested \meta{function} or \meta{environment} at the terminal. If
+%   the \meta{function} or \meta{environment} has no known argument
+%   specification then an error is issued.
+这两个函数会在终端显示 \meta{function} 或 \meta{environment} 的当前选项规范。
+如果 \meta{function} 或 \meta{environment} 有未知选项规范那么会报错。
+\end{function}
+
+%
+% \section{Load-time options}
+\section{载入时选项}
+
+%
+\DescribeOption{log-declarations}
+% The package recognises the load-time option \texttt{log-declarations},
+% which is a key--value option taking the value \texttt{true} and
+% \texttt{false}. By default, the option is set to \texttt{true}, meaning
+% that each command or environment declared is logged. By loading
+% \pkg{xparse} using
+% \begin{verbatim}
+%   \usepackage[log-declarations=false]{xparse}
+% \end{verbatim}
+% this may be suppressed and no information messages are produced.
+%
+本宏包载入时可以带一个键值型选项 \texttt{log-declarations}，取值为 \texttt{true} 或 \texttt{false}。
+默认情况下是 \texttt{true}，即声明的每一个命令或环境都会在日志中记录。
+如果使用
+\begin{verbatim}
+    \usepackage[log-declarations=false]{xparse}
+\end{verbatim}
+导入宏包，那么不会生成相关信息。
+
+\end{document}
+
