@@ -1,6 +1,7 @@
-\documentclass{l3doc}
+\documentclass[full]{l3doc}
 %latex3/l3kernel/expl3.dtx
 \usepackage[UTF8, punct = kaiming, heading]{ctex}
+\usepackage{graphicx}
 \usepackage{hyperref}
 
 \providecommand\acro[1]{\textsc{\MakeLowercase{#1}}}
@@ -20,14 +21,13 @@
 %    }^^A
 % }
 %
-% \date{Released 2017/11/14}
-
+% \date{Released 2018-05-13}
 
 \begin{document}
     
-\title{\textsf{expl3} 宏包和 \LaTeX3 编程\footnotemark}
+\title{\textsf{expl3} 宏包与 \LaTeX3 编程\footnotemark}
 \author{\LaTeX3 项目组}
-\date{发布于 2017/11/14}
+\date{发布于 2018-05-13}
 
 \maketitle
 
@@ -56,12 +56,11 @@
     \begin{flushright}
         盛文博\\
         \href{mailto:wbsheng88@foxmail.com}{<wbsheng88@foxmail.com>}\\
-        2017年11月22日
+        \today
     \end{flushright}
 }%
 \makeatother
 
-%
 % \begin{abstract}
 \begin{abstract}
 
@@ -70,9 +69,8 @@
 % conventions that have been designed to meet the requirements of
 % implementing large scale \TeX{} macro programming projects such as
 % \LaTeX{}. These programming conventions are the base layer of \LaTeX3.
-实现 \LaTeX{} 等大型 \TeX{} 宏编程项目对编程风格设计提出了更高需求。
-本文为此介绍一套新的程序设计约定。
-这些约定属于 \LaTeX3 的基础层面。
+针对 \LaTeX{} 等大型 \TeX{} 宏编程项目对编程风格设计的需求，
+本文介绍一套属于 \LaTeX3 的基础层面的全新程序设计约定。
 
 %
 % The main features of the system described are:
@@ -97,7 +95,7 @@
 \end{itemize}
 该系统已经用于 \LaTeX3 项目中的 \TeX{} 程序设计基础。
 请注意，该语言不是为了用在文档标记或者样式规范中，
-而是其构建基础。
+而是为了构建其基础。
 
 %
 % This document is an introduction to the ideas behind the \pkg{expl3}
@@ -140,7 +138,7 @@
 
 \pkg{expl3} 宏集提供了新的 \LaTeX{} 程序设计接口。
 为了使编程系统化，\LaTeX3 使用了与 \LaTeXe{} 或 plain \TeX{} 截然不同的程序风格约定。
-因此，进行 \LaTeX3 开发需要熟悉这种新语言的相关语法规则。
+因此，进行 \LaTeX3 开发需要熟悉这种全新的语法规则。
 
 % The next section shows where this language fits into a complete
 % \TeX{}-based document processing system.  We then describe the major
@@ -148,10 +146,10 @@
 % argument specification syntax used in function names.
 %
 
-下一节将展示在一个完整的基于 \TeX{} 的文档处理系统中，这项语言适用于哪些地方。
-之后将描述命令名称语法结构的主要特性，包括函数选项的语法规范。
+下一节将展示，在一个完整的 \TeX{} 文档处理系统中，这项语言适用于哪些地方。
+之后将描述命令名称的语法结构的主要特性，比如函数选项的语法规范。
 然后将解释这种选项语法背后的实用思想，
-同时也会包括展开控制机制和定义函数不同形式的接口。
+同时也包括展开控制机制和定义不同形式函数的接口。
 % The practical ideas behind this argument syntax will be explained,
 % together with the expansion control mechanism and the interface
 % used to define variant forms of functions.
@@ -178,14 +176,14 @@
 
 在基于 \TeX{} 的文档处理系统中，
 我们可以罗列出涉及到不同层面接口的各种语言。
-本节将介绍在 \LaTeX3 中最重要的一些。
+本节将介绍在 \LaTeX3 中最重要的一些部分。
 
 % \begin{description}
 \begin{description}
 %   \item[Document mark-up] This comprises those commands (often called
 %     tags) that are to embedded in the document (the |.tex| file).
 %
-\item[文档标记] 这包括嵌入到文档（|.tex| 文件）中的一些命令，通常称为标签（tag）。
+\item[文档标记] 包括文档（|.tex| 文件）中的一些命令，通常称为标签（tag）。
 
 %     It is generally accepted that such mark-up should be essentially
 %     \emph{declarative}. It may be traditional \TeX{}-based mark-up such
@@ -211,12 +209,13 @@
 %     (\emph{e.g.}~\tn{box} or \tn{special}).
 传统 \TeX{} 代码约定（如同~\cite{A-W:K-TB} 所描述的）的一大问题就是，
 \TeX{} 确实精心而巧妙地设计了原始格式命令的名称和语法，
-使得当作者在文档标记或宏中可以很“自然”地直接使用这些原始命令。
+这样文档作者就可以在标记或宏中很“自然”地直接使用这些原始命令。
 然而具有讽刺意味的是，无处不在的逻辑标记（这广泛认为是一大优势）
-意味着直接在文档或者作者自定义的宏中几乎没有必要使用这些格式命令。
+反而导致几乎没有必要在文档或自定义宏中直接使用这些原始格式命令。
 几乎只有 \TeX{} 开发人员定义高层次命令时才使用原始命令，
-而对于 \TeX{} 开发人员，这种特殊的语法几乎是不流行的。
-另外，其中许多命令的名称如果没有被原始命令占用的话（例如~\tn{box} 或 \tn{special}）本可以像那些文档标记一样广泛使用的。
+而在社区中这种特殊的语法几乎是不流行的。
+另外，原始命令占用了很多方便的名称（例如~\tn{box} 或 \tn{special}），
+否则本可以像文档标记一样广泛使用的。
 
 %
 %   \item[Designer interface] This relates a (human) typographic
@@ -228,7 +227,7 @@
 %
 
 \item[设计者接口] 该接口将文档的排版设计规范与“格式化文档”的程序联系起来。
-理想状况下，应当使用声明式的语言以促进表达不同文档元素之间的布局关系和间距规则。
+理想状况下应当使用声明式的语言，这样可以更好地表达不同文档元素之间的布局关系和间距规则。
 
 %     This language is not embedded in document text and it will be very
 %     different in form to the document mark-up language.  For \LaTeX{},
@@ -237,7 +236,7 @@
 %     implementing a design specification in  \LaTeX{} requires far more
 %     \enquote{low-level} coding than is acceptable.
 %
-这种语言没有嵌入到文档文本中，所以与文档标记语言相比在形式上有很大不同。
+这种语言没有嵌入到文档文本中，所以其形式与文档标记语言有很大不同。
 对于 \LaTeX{}，在  \LaTeX{}2.09 中这一层次几乎完全是缺失的；
 \LaTeXe{} 在这一领域做了一些改进，
 然而在 \LaTeX{} 中实现一套设计规范仍然需要很多“低层次”编程，而这是不可接受的。
@@ -251,7 +250,7 @@
 %     current \LaTeX{} system.
 \item[开发者接口]
 这一语言构建在 \TeX{} 原始命令（或者后继程序）之上，并实现了基本排版功能。
-它也用于“在\TeX{} 内”实现前两种语言，正如当前的 \LaTeX{} 系统一样。
+它也用于“在\TeX{} 内”实现前两种语言，比如当前的 \LaTeX{} 系统就是这样。
 %
 % \end{description}
 \end{description}
@@ -339,13 +338,13 @@
 在给出命名机制的细节之前，这里列出一些典型例子来说明该机制的风格；
 首先是一些变量名
 \begin{quote}
-    \cs{l_tmpa_box} 是对应于盒子寄存器的局部变量（这里的~|l_| 前缀）。\\
-    \cs{g_tmpa_int} 是对应于整型寄存器（即 \TeX{} 计数寄存器）的全局变量（这里的~|g_| 前缀）。\\
+    \cs{l_tmpa_box} 是对应于盒子寄存器的局部变量（这里的~|l_| 前缀代表局部）。\\
+    \cs{g_tmpa_int} 是对应于整型寄存器（即 \TeX{} 计数寄存器）的全局变量（这里的~|g_| 前缀代表全局）。\\
     \cs{c_empty_tl} 是常值（|c_|）记号列表变量，并且总是空的。
 \end{quote}
 %
 % Now here is an example of a typical function name.
-这里是一个典型的函数名称例子。
+接下来是一个典型的函数名称例子。
 
 %
 % \cs{seq_push:Nn} is the function which puts the token list specified
@@ -360,7 +359,7 @@
 % denotes such a \enquote{normal} argument form. The name of the function
 % indicates it belongs to the |seq| module.
 %
-\cs{seq_push:Nn} 是一个函数，将由第二个选项确定的记号列表放入有第一个选项确定的栈中。
+\cs{seq_push:Nn} 是一个函数，将由第二个选项确定的记号列表放入由第一个选项确定的栈中。
 两个选项的不同之处由后缀~|:Nn| 指定。
 第一个选项必须是一个单记号，用以命名栈参数：这样的单记号选项记为~|N|。
 第二个选项是常规的 \TeX{} “未限定选项”，可以是单记号或者限定在配对大括号中的记号列表
@@ -410,7 +409,7 @@
 % and related functions,~|seq| for sequences and~|box| for boxes.
 %
 \emph{模块module} 是一组紧密相关的函数和变量的集合。
-典型的模块名包括整型参数和相关函数模块~|int|，序列~|seq| 和盒子~|box|。
+典型的模块名包括整型参数（以及相关函数）模块~|int|，序列~|seq| 和盒子~|box| 等等。
 
 % Packages providing new programming functionality will add new modules
 % as needed; the programmer can choose any unused name, consisting
@@ -435,7 +434,7 @@
 % name exists.
 %
 
-\emph{描述description} 部分给出函数或参数的更多详细信息，并确定了唯一的名称。
+\emph{描述description} 给出函数或参数的更多详细信息，并确定了唯一的名称。
 它应当包含字母和可能的~|_|~字符。
 一般而言，描述部分应当使用 |_| 来划分“单词”或者其它部分。
 例如，\LaTeX3 内核提供了 \cs{if_cs_exist:N}，
@@ -469,8 +468,8 @@
 % clearly just an internal command) without breaking something.
 %
 
-\TeX{} 语言的问题之一就是除了通过约定之外不支持名空间和封装。
-结果便是 \LaTeXe{} 内核中的几乎所有内部命令最后都被外部宏包使用并进行修改或扩展。
+\TeX{} 语言的问题之一就是除了通过约定之外不支持名空间（name space）和封装。
+结果便是 \LaTeXe{} 内核中的几乎所有内部命令最后都会被外部宏包使用并进行修改或扩展。
 造成的后果是现在几乎不可能改动 \LaTeXe{} 内核中的任何东西而不造成破坏
 （即便很明显仅仅是个内部命令）。
 
@@ -484,8 +483,8 @@
 % so that we are confident that this will adopted and provides the
 % desired results.
 
-在 \pkg{expl3} 中我们希望明确地区分公共接口（外部宏包可以使用或依赖）和私有函数和变量（不应当出现在模块之外），
-进而可以明显地改善这一状况。
+在 \pkg{expl3} 中我们希望明确地区分公共接口（外部宏包可以使用或依赖）和私有函数/变量（不应当出现在模块之外），
+进而可以明显地改善目前这一状况。
 而这在没有严重的计算开销条件下几乎不可能实施，
 因此我们只是通过命名约定和一些支持机制来实现。
 不过，我们认为这种命名约定很容易理解和遵守，
@@ -500,7 +499,8 @@
 % or private.
 %
 
-由模块创建的函数既可以是“公共”的（使用给定接口进行文档说明）也可以是“私有”的（只在该模块内部使用，因此没有正式文档）。
+由模块创建的函数既可以是“公共”的（使用给定接口进行文档说明），
+也可以是“私有”的（只在该模块内部使用，因此没有正式文档）。
 很重要的一点是，只能使用带有文档的接口；
 同时有必要在函数名或变量名中表明是公共的还是私有的。
 
@@ -563,6 +563,13 @@
 %   \ttfamily
 %   |%<@@=|\meta{module}|>|
 % \end{quote}
+内部函数的正式语法可以清晰地区分公共和私有代码，
+但是同时也会包含冗余信息（每一内部函数或变量都包含 \texttt{__\meta{module}}）。
+为了帮助开发者，\pkg{l3docstrip} 项目引入语法
+\begin{quote}
+    \ttfamily
+    |%<@@=|\meta{module}|>|
+\end{quote}
 % which then allows |@@| (and |_@@| in case of variables) to be used as
 % a place holder for \texttt{__\meta{module}} in code. Thus for example
 % \begin{verbatim}
@@ -583,14 +590,6 @@
 % \texttt{__\meta{module}}, because we think that this helps to
 % distinguish variables from functions in the source when the |@@|
 % convention is used.
-
-内部函数的正式语法可以清晰地区分公共和私有代码，
-但是同时也会包含冗余信息（每一内部函数或变量都包含 \texttt{__\meta{module}}）。
-为了帮助开发者，\pkg{l3docstrip} 项目引入语法
-\begin{quote}
-\ttfamily
-|%<@@=|\meta{module}|>|
-\end{quote}
 这样允许在代码中使用 |@@|（对于变量的情况是 |_@@|）作为 \texttt{__\meta{module}} 的占位符。
 例如，\pkg{l3docstrip} 可以将如下代码
 \begin{verbatim}
@@ -628,7 +627,7 @@
 %
 
 名称中的 \meta{作用域scope} 部分描述了变量是如何获取的。
-变量分为局部、全局和常值等。
+变量分为局部、全局和常值等类型。
 \emph{作用域}类型出现在名称的开始处。
 使用的代码为：
 \begin{arg-description}
@@ -661,7 +660,7 @@
 % system.
 %
 \meta{类型type} 的内容位于可用的\emph{数据类型}列表中；\footnote{
-当然，如果需要一个全新的数据类型，那么不属于这种情形。
+当然，例外是需要一个全新的数据类型。
 不过我们希望只有内核团队才需要创建新的数据类型。}
 这包括 \TeX{} 原始命令中的数据类型，比如各种寄存器。
 不过这些已经整合到由 \LaTeX{} 程序系统内部构建的数据类型中。
@@ -696,7 +695,7 @@
 
 \LaTeX3 中的数据类型包括：
 \begin{description}
-    \item[bool] true 或者 false（在 \LaTeX3 实现中没有使用 \tn{iftrue} 或 \tn{iffalse}）；
+    \item[bool] true 或者 false（\LaTeX3 不使用 \tn{iftrue} 或 \tn{iffalse}）；
     \item[box] 盒子寄存器；
     \item[clist] 逗号分隔列表；
     \item[coffin] “带有句柄的盒子”——一种高层次的数据类型，可以执行 |box| 对齐操作；
@@ -726,7 +725,7 @@
 
 名称“记号列表”可能会引起困扰，因此介绍一些背景是有必要的。
 \TeX{} 处理的是记号和记号列表，而不是字符，
-并且提供了两种方式来存储这些记号列表：在宏内以及记号寄存器（|toks|）。
+并且提供了两种方式来存储这些记号列表：在宏内部以及记号寄存器（|toks|）。
 在 \LaTeX3 中的实现意味着 |toks| 是不需要了，
 并且所有存储记号的操作都可以使用 |tl| 变量类型。
 
@@ -807,7 +806,7 @@
 % and provides a convenient method of naming similar functions that
 % differ only in their argument forms (see the next section for
 % examples).
-函数名称在一个冒号后以 \meta{选项规范arg-spec} 结尾。
+函数名称在冒号后以 \meta{选项规范arg-spec} 结尾。
 这给出函数使用的选项类型，
 并且提供了一种方便的手段用以给只有选项形式不同的类似函数命名（见下一节的例子）。
 %
@@ -820,52 +819,52 @@
 %
 % All functions have a base form with arguments using one of the
 % following argument specifiers:
+在所有函数都有的基本形式中，选项使用以下说明符之一：
 % \begin{arg-description}
+\begin{arg-description}
 %   \item[n]  Unexpanded token or braced token list.\\
 %     This is a standard \TeX{} undelimited macro argument.
+    \item[n] 不展开的记号或者带大括号的记号列表。\\
+    这是 \TeX{} 的标准未定界宏选项。
 %   \item[N]  Single token (unlike~|n|, the argument must \emph{not} be
 %     surrounded by braces).\\
 %     A typical example of a command taking an~|N|
 %     argument is~|\cs_set|, in which the command being defined must be
 %     unbraced.
+    \item[N] 单记号（与 |n| 不同，该选项一定\emph{不能}在大括号内）。\\
+    带有 |N| 选项的函数中，一个典型的例子是~|\cs_set|，其中被定义的命令一定是不加大括号的。
 %   \item[p]  Primitive \TeX{} parameter specification.\\
 %     This can be something simple like~|#1#2#3|, but may use arbitrary
 %     delimited argument syntax such as: |#1,#2\q_stop#3|. This is used
 %     when defining functions.
+    \item[p] \TeX{} 原始命令参数规范。\\
+    可以简单地取为~|#1#2#3|，但也可以使用任意定界选项语法，比如 |#1,#2\q_stop#3|。
+    在定义函数时会使用。
 %   \item[T,F]
 %     These are special cases of~|n| arguments, used for the
 %     true and false code in conditional commands.
+    \item[T,F] 这是选项 |n| 的特殊情形，用于条件命令中的真值判断。
 % \end{arg-description}
+\end{arg-description}
 % There are two other specifiers with more general meanings:
+另外还有两种意义更广泛的说明符：
 % \begin{arg-description}
+\begin{arg-description}
 %   \item[D] This means: \textbf{Do not use}. This special case is used
 %     for \TeX{} primitives.  Programmers outside the kernel team should
 %     not use these functions!
+    \item[D] 意思是\textbf{不要使用}（\textbf{Do not use}）。
+    这一特殊情形用于 \TeX{} 原始命令。
+    内核团队之外的开发者不要使用这些函数！
 %   \item[w] This means that the argument syntax is \enquote{weird} in that it
 %     does not follow any standard rule.  It is used for functions with
 %     arguments that take non standard forms: examples are \TeX{}-level
 %     delimited arguments and the boolean tests needed after certain
 %     primitive |\if|\ldots{} commands.
-% \end{arg-description}
-在所有函数都有的基本形式中，选项使用以下说明符之一：
-\begin{arg-description}
-    \item[n] 不展开的记号或者带大括号的记号列表。\\
-    这是 \TeX{} 的标准未定界宏选项。
-    \item[N] 单记号（与 |n| 不同，该选项一定\emph{不能}在大括号内）。\\
-    带有 |N| 选项的函数中，一个典型的例子是~|\cs_set|，其中被定义的命令一定是不加大括号的。
-    \item[p] \TeX{} 原始命令参数规范。\\
-    可以简单地取为~|#1#2#3|，但也可以使用任意定界选项语法，比如 |#1,#2\q_stop#3|。
-    在定义函数时会使用。
-    \item[T,F] 这是选项 |n| 的特殊情形，用于条件命令中的真值判断。
-\end{arg-description}
-另外还有两种意义更广泛的说明符：
-\begin{arg-description}
-    \item[D] 意思是\textbf{不要使用}（\textbf{Do not use}）。
-    这一特殊情形用于 \TeX{} 原始命令。
-    内核团队之外的开发者不要使用这些函数！
     \item[w] 选项语法是“奇怪的（weird）”，不遵从任何标准规则。
     这用于带有非标准形式选项的函数：
-    相关例子包括 \TeX{} 水平的定界选项以及某些 |\if|\ldots{}  原始命令之后需要的布尔测试。
+    相关例子包括 \TeX{} 层面的定界选项以及某些 |\if|\ldots{} 原始命令之后需要的布尔测试。
+% \end{arg-description}
 \end{arg-description}
 
 %
@@ -901,7 +900,7 @@
 % where |#1| is the filename. In other words, this operation would
 % push the file name as is onto the stack.
 让我们看一些可能要进行的典型操作。
-假设我们维护一个文件打开的栈，并使用栈 |\g_ior_file_name_seq| 来保持这些文件的跟踪
+假设我们维护一个文件打开的栈，并使用栈 |\g_ior_file_name_seq| 来保持对这些文件的跟踪
 （\texttt{ior} 是用于文件读取模块的前缀）。
 这里基本操作是将一个文件名推入栈内，可以通过以下操作完成：
 \begin{quote}
@@ -936,7 +935,7 @@
     \cs{seq_gpush:Nn} |\g_ior_file_name_seq| |\l_ior_curr_file_tl|
 \end{quote}
 那么不会将变量的值推入栈内——推入栈内的仅仅是该变量本身的名称。
-取代的办法是，有必要使用一定合适数量的 \cs{exp_after:wN}（以及额外的大括号）
+取代的办法是，有必要使用一定合适数量的 \cs{exp_after:wN} （以及额外的大括号）
 来改变展开的顺序\footnote{
 \cs{exp_after:wN} 是 \TeX{} 原始命令 \tn{expandafter} 的 \LaTeX3 名称}，即
 \begin{quote}
@@ -980,18 +979,25 @@
     \cs{seq_gpush:NV} |\g_ior_file_name_seq \l_ior_curr_file_tl|
 \end{quote}
 即可达到想要的效果。
-这里第二个选项 |V| 是在传递给基函数之前“先检索变量的值”。
+这里第二个选项 |V| 的意思是，在传递给基函数之前“先检索变量的值”。
 
 %
 % The following letters can be used to denote special treatment of
 % arguments before passing it to the base function:
+以下字母可以用于表示选项传递给基函数之前的特殊处理：
 % \begin{description}
+\begin{description}
 %   \item[c] Character string used as a command name.\\ The argument (a
-%     token or braced token list) must, when fully expanded, produce a
-%     sequence of characters which is then used to construct a command
-%     name (\emph{via}~\tn{csname} \ldots \tn{endcsname}).
-%     This command name is the
-%     single token that is passed to the function as the argument. Hence
+%     token or braced token list) is \emph{fully expanded}; the result
+%     must be a sequence of characters which is then used to construct a
+%     command name (\emph{via}~\tn{csname} \ldots \tn{endcsname}).  This
+%     command name is a single token that is passed to the function as
+%     the argument. Hence
+    \item[c] 字符（character），作为命令名称使用。\\
+    该选项（记号或者带大括号的记号列表）是\emph{完全展开的}；
+    其结果必须是字符序列，
+    并在之后用于构建命令名称（\emph{通过}~\tn{csname} \ldots \tn{endcsname} 方法）。
+    该命令名是单记号，可以作为选项传递给函数。因此
 %     \begin{quote}
 %       \cs{seq_gpush:cV} |{ g_file_name_seq }| \cs{l_tmpa_tl}
 %     \end{quote}
@@ -999,11 +1005,19 @@
 %     \begin{quote}
 %       \cs{seq_gpush:NV} |\g_file_name_seq| \cs{l_tmpa_tl}.
 %     \end{quote}
-%     Remember that \texttt{c} arguments are \emph{fully expanded} by
-%     \TeX{} when creating csnames. This means that (a) the entire
+    \begin{quote}
+        \cs{seq_gpush:cV} |{ g_file_name_seq }| \cs{l_tmpa_tl}
+    \end{quote}
+    等价于
+    \begin{quote}
+        \cs{seq_gpush:NV} |\g_file_name_seq| \cs{l_tmpa_tl}
+    \end{quote}
+%     Full expansion means that (a) the entire
 %     argument must be expandable and (b) any variables are
 %     converted to their content. So the preceding examples are also
 %     equivalent to
+    完全展开的含义是 (a) 整个选项必须是可展开的；(b) 任何变量都会转为该变量的内容。
+    因此之前的例子也等价于
 %     \begin{quote}
 %       \cs{tl_new:N} |\g_file_seq_name_tl| \\
 %       \cs{tl_gset:Nn} |\g_file_seq_name_tl { g_file_name_seq }| \\
@@ -1011,26 +1025,48 @@
 %     \end{quote}
 %     (Token list variables are expandable and we could omit the
 %     accessor function \cs{tl_use:N}.  Other variable types require the
-%     appropriate \cs{<var>_use:N} functions to be used in this
+%     appropriate \cs{\meta{var}_use:N} functions to be used in this
 %     context.)
+    \begin{quote}
+        \cs{tl_new:N} |\g_file_seq_name_tl| \\
+        \cs{tl_gset:Nn} |\g_file_seq_name_tl { g_file_name_seq }| \\
+        \cs{seq_gpush:cV} |{| \cs{tl_use:N} |\g_file_seq_name_tl }| \cs{l_tmpa_tl}.
+    \end{quote}
+    （记号列表变量是可展开的，此时我们可以省略访问函数 \cs{tl_use:N}。
+    其它变量类型在这一环境下则需要使用合适的 \cs{<var>_use:N} 函数。）
 %   \item[V]  Value of a variable.\\
 %     This means that the contents of the register in question is used as the
 %     argument, be it an integer, a length-type register, a token list variable
 %     or similar. The value is passed to the function as a braced token list.
-%     Can be applied to variables which have a \cs{\meta{var}_use:N} function,
+%     Can be applied to variables which have a \cs{\meta{var}_use:N} function
+%     (other than floating points and boxes), 
 %     and which therefore deliver a single \enquote{value}.
+    \item[V] 变量的值（Value）。\\
+    此时，选项会使用寄存器的内容，可以是整型、长度类型的寄存器、记号列表变量等。
+    该值作为带大括号的记号列表被传递给函数。
+    可以用于带有 \cs{\meta{var}_use:N} 函数（而不是浮点数或盒子），
+    从而可以传递单“值”的变量。
 %   \item[v] Value of a register, constructed from a character string
 %     used as a command name.\\
 %     This is a combination of |c| and |V| which first constructs a
 %     control sequence from the argument and then passes the value of the
-%     resulting register to the function.
-%     Can be applied to variables which have a \cs{\meta{var}_use:N} function,
-%     and which therefore deliver a single \enquote{value}.
+%     resulting register to the function.  
+%     Can be applied to variables which have a \cs{\meta{var}_use:N} function (other than
+%     floating points and boxes), and which therefore deliver a single
+%     \enquote{value}.
+    \item[v] 寄存器的值（value），从命令名称的字符串构建而来。\\
+    该类型是 |c| 和 |V| 的结合，首先从选项中构造一个控制序列，然后将生成的寄存器的值传递给函数。
+    可以用于带有 \cs{\meta{var}_use:N} 函数（而不是浮点数或盒子），
+    从而可以传递单值的变量。
 %   \item[x]  Fully-expanded token or braced token list.\\
 %     This means that the argument is expanded as in the replacement
 %     text of an~\tn{edef}, and the expansion is passed to the function as
 %     a braced token list.  Expansion takes place until only unexpandable
 %     tokens are left.  |x|-type arguments cannot be nested.
+    \item[x] 完全展开（expand）的记号或者带大括号的记号列表。\\
+    该选项会像用 \tn{edef} 一样展开，然后展开值作为带大括号的记号列表传递给函数。
+    展开会一直执行，直到遇到不可展开的记号。
+    |x| 类型的选项不可以嵌套。
 %   \item[o]  One-level-expanded token or braced token list.\\
 %     This means that the argument is expanded one level, as by
 %     \tn{expandafter}, and the expansion is passed to the function as a
@@ -1038,57 +1074,23 @@
 %     token list then only the first token in that list is expanded.
 %     In general, using \texttt{V} should be preferred to using
 %     \texttt{o} for simple variable retrieval.
+    \item[o] 展开一层（one-level）的记号或带大括号的记号列表。\\
+    这说明该选项会像 \tn{expandafter} 那样展开一层，
+    然后展开值作为带大括号的记号列表传递给函数。
+    请注意，如果原始的参数是带大括号的记号列表，
+    那么只有列表中的第一个记号会被展开。
+    一般来说，对于简单的变量检索使用类型 \texttt{V} 比使用 \texttt{o} 更好一些。
 %   \item[f] Expanding the first token recursively in a braced token
 %     list.\\ Almost the same as the |x| type except here the token list
 %     is expanded fully until the first unexpandable token is found and
 %     the rest is left unchanged. Note that if this function finds a
 %     space at the beginning of the argument it gobbles it and does not
 %     expand the next token.
+    \item[f] 在带有大括号的记号列表中递归地展开第一个（first）记号。\\
+    和 |x| 类型几乎相同，不同之处在于这里记号列表被完全展开，
+    直到发现第一个不可展开的记号，而剩下的部分则保持不变。
+    请注意，如果该函数在选项的一开始发现空格，那么会吞掉该空格，而不会展开接下来的记号。
 % \end{description}
-以下字母可以用于表示选项传递给基函数之前的特殊处理：
-\begin{description}
-    \item[c] 字符（character）作为命令名称使用。\\
-        该选项（记号或者带大括号的记号列表）在完全展开后必须生成字符序列，
-        之后用于构建命令的名称（通过~\tn{csname} \ldots \tn{endcsname} 方法）。
-        该命令的名称是作为选项传递给函数的单记号。因此
-        \begin{quote}
-            \cs{seq_gpush:cV} |{ g_file_name_seq }| \cs{l_tmpa_tl}
-        \end{quote}
-        等价于
-        \begin{quote}
-            \cs{seq_gpush:NV} |\g_file_name_seq| \cs{l_tmpa_tl}
-        \end{quote}
-        需要强调的是，\texttt{c} 选项在创建命令名称时会由 \TeX{} \emph{完全展开}。
-        这意味着 (a) 整个选项必须是可展开的；(b) 任何变量都会转为该变量的内容。
-        因此之前的例子也等价于
-        \begin{quote}
-            \cs{tl_new:N} |\g_file_seq_name_tl| \\
-            \cs{tl_gset:Nn} |\g_file_seq_name_tl { g_file_name_seq }| \\
-            \cs{seq_gpush:cV} |{| \cs{tl_use:N} |\g_file_seq_name_tl }| \cs{l_tmpa_tl}.
-        \end{quote}
-        （记号列表变量是可展开的，此时我们可以省略访问函数 \cs{tl_use:N}。
-        其它变量类型在这一环境下则需要使用合适的 \cs{<var>_use:N} 函数。）
-    \item[V] 变量的值。\\
-        此时，寄存器的内容会作为选项使用，可以是整型、长度类型的寄存器、记号列表变量等。
-        该值作为带大括号的记号列表被传递给函数。
-        可以用于带有 \cs{\meta{var}_use:N} 函数从而传递单值的变量。
-    \item[v] 寄存器的值，从用于命名名称的字符串构建而来。\\
-        该类型是 |c| 和 |V| 的结合，首先从选项中构造一个控制序列，然后将生成的寄存器的值传递给函数。
-        可以用于带有 \cs{\meta{var}_use:N} 函数从而传递单值的变量。
-    \item[x] 完全展开的记号或者带大括号的记号列表。\\
-        该选项会像用 \tn{edef} 一样展开，然后展开值作为带大括号的记号列表传递给函数。
-        展开会一直执行，直到遇到不可展开的记号。
-        |x| 类型的选项不可以嵌套。
-    \item[o] 展开一层的记号或带大括号的记号列表。\\
-        这说明该选项会像 \tn{expandafter} 那样展开一层，
-        然后展开值作为带大括号的记号列表传递给函数。
-        请注意，如果原始的参数是带大括号的记号列表，
-        那么只有列表中的第一个记号会被展开。
-        一般来说，对于简单的变量检索使用类型 \texttt{V} 比使用 \texttt{o} 更好一些。
-    \item[f] 在带有大括号的记号列表中递归地展开第一个记号。\\
-        和 |x| 类型几乎相同，不同之处在于这里记号列表被完全展开，
-        直到发现第一个不可展开的记号，而剩下的部分则保持不变。
-        请注意，如果该函数在选项的一开始发现空格，那么会吞掉该空格，而不会展开接下来的记号。
 \end{description}
 
 %
@@ -1103,7 +1105,8 @@
 % examples copied from \texttt{latex.ltx}.
 如何安排函数的选项，使得选项在调用函数之前能够在合适的位置展开，
 这是每一个 \TeX{} 开发者都经常面对的头疼问题。
-我们从 \texttt{latex.ltx} 中选取两个例子来说明展开控制机制能够对这一问题带来立竿见影的效果。
+我们从 \texttt{latex.ltx} 中选取两个例子，
+进而说明展开控制机制能够对这一问题带来立竿见影的效果。
 
 %
 % \begin{verbatim}
@@ -1129,7 +1132,8 @@
 第一份代码片段本质上只是个全局的 \tn{let} 命令，
 它的两个选项必须在 \tn{let} 命令执行之前首先进行构造。
 |#1| 是一个控制序列，比如 |\textcurrency|。
-将当前字体编码字符（存储在|\cf@encoding|，需要完全展开）和符号名称连接起来获得第一个选项需要定义的记号。
+将当前字体编码字符（存储在|\cf@encoding|，需要完全展开）和符号名称连接起来，
+并获得第一个选项需要定义的记号。
 而第二个选项中的记号也是相同的过程，只不过使用默认编码 |?|。
 而结果就是一团 \tn{expandafter} 和 \tn{csname} 交织在一起
 （当然 \TeX{} 程序员都很喜欢用），导致代码本质上是不可读的。
@@ -1382,117 +1386,117 @@
 
 %
 % \begin{description}
+\begin{description}
 %   \providecommand\explpkg[2]{\item[#1]#2}
+    \providecommand\explpkg[2]{\item[#1]#2}
 %   \explpkg{l3basics}{
 %     This contains the basic definition modules used
 %     by the other packages.
 %   }
+    \explpkg{l3basics}{
+        包含其它宏包使用的基本定义模块。}
 %   \explpkg{l3box}{
 %     Primitives for dealing with boxes.
 %   }
+    \explpkg{l3box}{
+        处理盒子的原始命令。}
 %   \explpkg{l3clist}{
 %     Methods for manipulating comma-separated token lists.
 %   }
+    \explpkg{l3clist}{
+        操作逗号分隔记号列表的方法。}
 %   \explpkg{l3coffins}{
 %     Augmented box constructs for alignment operations.
 %   }
+    \explpkg{l3coffins}{
+        补充的盒子对齐操作。}
 %   \explpkg{l3expan}{
 %     This is the argument expansion module discussed earlier in this
 %     document.
 %   }
+    \explpkg{l3expan}{
+        本文档之前讨论的选项展开模块。}
 %   \explpkg{l3int}{
 %     This implements the integer data-type \texttt{int}.
 %   }
+    \explpkg{l3int}{
+        实现整型数据类型 \texttt{int}。}
 %   \explpkg{l3keys}{
 %     For processing lists of the form
 %     \texttt{\{ key1=val1 , key2=val2 \}}, intended to work
 %     as a \LaTeX3 version of \pkg{xkeyval}/\pkg{kvoptions}, although
 %     with input syntax more like that of \pkg{pgfkeys}.
 %   }
+    \explpkg{l3keys}{
+        处理具有形式 \texttt{\{ key1=val1 , key2=val2 \}} 的列表，
+        本模块的目的是 \LaTeX3 版本的 \pkg{xkeyval}/\pkg{kvoptions} 宏包，
+        不过输入的语法与 \pkg{pgfkeys} 更相似。}
 %   \explpkg{l3msg}{
 %     Communicating with the user: includes low-level hooks to allow
 %     messages to be filtered (higher-level interface for filtering
 %     to be written!).
 %   }
+    \explpkg{l3msg}{
+        用户交互：包括一些用于过滤信息的低层次的钩子（高层次的过滤信息接口还在开发）。}
 %   \explpkg{l3names}{
 %     This sets up the basic naming scheme and renames all
 %     the \TeX{} primitives.
 %   }
+    \explpkg{l3names}{
+        设置基本命名机制，并且重命名了所有的 \TeX{} 原始命令。}
 %   \explpkg{l3prg}{
 %     Program control structures such as boolean data type |bool|, generic
 %     do-while loops, and conditional flow.
 %   }
+    \explpkg{l3prg}{
+        程序控制的一些结构，例如布尔变量类型 |bool|、一般的 do-while 循环以及条件流。}
 %   \explpkg{l3prop}{
 %     This implements the data-type for \enquote{property lists} that are used, in
 %     particular, for storing key/value pairs.
 %   }
+    \explpkg{l3prop}{
+        实现了“属性列表”的数据类型，主要用于存储键值对。}
 %   \explpkg{l3quark}{
 %     A \enquote{quark} is a command that is defined to expand to
 %     itself!  Therefore they must never be expanded as this would generate an
 %     infinite recursion; they do however have many uses, \emph{e.g.}~as
 %     special markers and delimiters within code.
 %   }
+    \explpkg{l3quark}{
+        “夸克（quark）”是定义为可以展开到自己的命令！
+        因此绝对不可以被展开，否则会产生无穷递归。
+        不过它们确实有很多应用，比如作为代码内特别的标识符或定界符。\footnote{
+            这个概念疑似从 quine 变形而来，后者指能够生成自己的程序代码，见 \url{https://en.wikipedia.org/wiki/Quine_(computing)}
+            ——译注}}
 %   \explpkg{l3seq}{
 %     This implements data-types such as queues and stacks.
 %   }
+    \explpkg{l3seq}{
+        实现了队列和栈等数据类型。}
 %   \explpkg{l3skip}{
 %     Implements the \enquote{rubber length} datatype \texttt{skip}, the
 %     \enquote{rigid length} datatype |dim|, and the math mode
 %     \enquote{rubber length} datatype \texttt{muskip}.
 %   }
+    \explpkg{l3skip}{
+        实现了“弹性长度”数据类型 \texttt{skip}，“严格长度”数据类型 |dim|，
+        以及数学模式“弹性长度”数据类型 \texttt{muskip}。}
 %   \explpkg{l3tl}{
 %     This implements a basic data-type, called a \textit{token-list
 %     variable} (|tl var.|), used for storing named token lists: these are
 %     \TeX{} macros with no arguments.
 %   }
+    \explpkg{l3tl}{
+        实现了基本数据类型 \emph{记号列表变量}（|tl var.|），用于存储命名记号列表：
+        不带参数的 \TeX{} 宏。}
 %   \explpkg{l3token}{
 %     Analysing token lists and token streams, including peeking ahead to
 %     see what's coming next and inspecting tokens to detect which kind
 %     they are.
 %   }
-% \end{description}
-\begin{description}
-    \providecommand\explpkg[2]{\item[#1]#2}
-    \explpkg{l3basics}{
-        包含其它宏包使用的基本定义模块。}
-    \explpkg{l3box}{
-        处理盒子的原始命令。}
-    \explpkg{l3clist}{
-        操作逗号分隔记号列表的方法。}
-    \explpkg{l3coffins}{
-        补充的盒子对齐操作。}
-    \explpkg{l3expan}{
-        本文档之前讨论的选项展开模块。}
-    \explpkg{l3int}{
-        实现整型数据类型 \texttt{int}。}
-    \explpkg{l3keys}{
-        处理具有形式 \texttt{\{ key1=val1 , key2=val2 \}} 的列表，
-        本模块的目的是 \LaTeX3 版本的 \pkg{xkeyval}/\pkg{kvoptions} 宏包，
-        不过输入的语法与 \pkg{pgfkeys} 更相似。}
-    \explpkg{l3msg}{
-        用户交互：包括一些用于过滤信息的低层次的钩子（高层次的过滤信息接口还在开发）。}
-    \explpkg{l3names}{
-        设置基本命名机制，并且重命名了所有的 \TeX{} 原始命令。}
-    \explpkg{l3prg}{
-        程序控制的一些结构，例如布尔变量类型 |bool|、一般的 do-while 循环以及条件流。}
-    \explpkg{l3prop}{
-        实现了“属性列表”的数据类型，主要用于存储键值对。}
-    \explpkg{l3quark}{
-        “夸克（quark）”是定义为可以展开到自己的命令！
-        因此绝对不可以被展开，否则会产生无穷递归。
-        不过它们确实有很多应用，比如作为代码内特别的标识符或定界符。\footnote{
-        这个概念疑似从 quine 变形而来，后者指能够生成自己的程序代码，见 \url{https://en.wikipedia.org/wiki/Quine_(computing)}
-    ——译注}}
-    \explpkg{l3seq}{
-        实现了队列和栈等数据类型。}
-    \explpkg{l3skip}{
-        实现了“弹性长度”数据类型 \texttt{skip}，“严格长度”数据类型 |dim|，
-        以及数学模式“弹性长度”数据类型 \texttt{muskip}。}
-    \explpkg{l3tl}{
-        实现了基本数据类型 \emph{记号列表变量}（|tl var.|），用于存储命名记号列表：
-        不带参数的 \TeX{} 宏。}
     \explpkg{l3token}{
         分析记号列表和记号流，包括查看接下来的记号以及检测相关类型。}
+% \end{description}
 \end{description}
 
 %
@@ -1511,22 +1515,32 @@
 
 %
 % \begin{itemize}
+\begin{itemize}
 %   \item \pkg{expl3} is mainly focused on programming. This means that
 %     some areas still require the use of \LaTeXe{} internal macros.
 %     For example, you may well need \tn{@ifpackageloaded}, as there
 %     is currently no native \LaTeX3 package loading module.
+    \item \pkg{expl3} 主要关注于程序设计。所以某些领域仍然需要 \LaTeXe{} 的内部宏。
+    例如你可能需要 \tn{@ifpackageloaded}，因为当前 \LaTeX3 没有原生的宏包导入模块。
 %   \item User level macros should be generated using the mechanism
 %     available in the \pkg{xparse} package, which is part of the
 %     \texttt{l3package} bundle, available from CTAN or the \LaTeX3 SVN
 %     repository.
+    \item 用户水平的宏应当使用 \pkg{xparse} 宏包中的机制生成，这是 \texttt{l3package} 宏集的一部分，
+    可以从 CTAN 或者 \LaTeX3 SVN 仓库获得。
 %   \item At an internal level, most functions should be generated
 %     \tn{long} (using \cs{cs_new:Npn}) rather than \enquote{short} (using
 %     \cs{cs_new_nopar:Npn}).
+   \item 在内部层面上，大部分函数应当生成为 \tn{long}（使用 \cs{cs_new:Npn}）
+    而不是“short”（使用 \cs{cs_new_nopar:Npn}）。
 %   \item Where possible, declare all variables and functions (using
 %     \cs{cs_new:Npn}, \cs{tl_new:N}, etc.) before use.
+    \item 尽可能在使用之前声明所有变量和函数（使用 \cs{cs_new:Npn}, \cs{tl_new:N} 等）。
 %   \item Prefer \enquote{higher-level} functions over \enquote{lower-level},
 %     where possible. So for example use \cs{cs_if_exist:N(TF)} and not
 %     \cs{if_cs_exist:N}.
+    \item 尽可能选择“高层次”函数而不是“低层次”函数。
+    例如使用 \cs{cs_if_exist:N(TF)}  而不是 \cs{if_cs_exist:N}。
 %   \item Use space to make code readable. In general, we recommend
 %     a layout such as:
 %     \begin{verbatim}
@@ -1539,38 +1553,30 @@
 %     \end{verbatim}
 %     where spaces are used around |{| and |}| except for isolated
 %     |#1|, |#2|, \emph{etc.}
+    \item 使用空格以增加代码的可读性。一般我们推荐以下的风格：
+    \begin{verbatim}
+        \cs_new:Npn \foo_bar:Nn #1#2
+            {
+                \cs_if_exist:NTF #1
+                    { \__foo_bar:n {#2} }
+                    { \__foo_bar:nn {#2} { literal } }
+            }
+    \end{verbatim}
+    在  |{| 和 |}| 周围使用空格，除非是单独的 |#1|, |#2| 等。
 %   \item Put different code items on separate lines: readability is
 %     much more useful than compactness.
+    \item 将不同的代码项目分行放置：可读性比紧凑性有用的多。
 %   \item Use long, descriptive names for functions and variables,
 %     and for auxiliary functions use the parent function name plus
 %     |aux|, |auxi|, |auxii| and so on.
+    \item 在函数和变量中使用长的描述性的名称，
+    而对于辅助函数则使用父函数加上 |aux|, |auxi|, |auxii| 等前后缀。
 %   \item If in doubt, ask the team via the LaTeX-L list: someone will
 %     soon get back to you!
+    \item 如果有任何疑问，
+    通过 \href{http://news.gmane.org/group/gmane.comp.tex.latex.latex3}{LaTeX-L} 列表咨询团队：
+    相关人员会很快回复！
 % \end{itemize}
-\begin{itemize}
-    \item \pkg{expl3} 主要关注于程序设计。所以某些领域仍然需要 \LaTeXe{} 的内部宏。
-        例如你可能需要 \tn{@ifpackageloaded}，因为当前 \LaTeX3 没有原生的宏包导入模块。
-    \item 用户水平的宏应当使用 \pkg{xparse} 宏包中的机制生成，这是 \texttt{l3package} 宏集的一部分，
-        可以从 CTAN 或者 \LaTeX3 SVN 仓库获得。
-   \item 在内部层面上，大部分函数应当生成为 \tn{long}（使用 \cs{cs_new:Npn}）
-        而不是“short”（使用 \cs{cs_new_nopar:Npn}）。
-    \item 尽可能在使用之前声明所有变量和函数（使用 \cs{cs_new:Npn}, \cs{tl_new:N} 等）。
-    \item 尽可能选择“高层次”函数而不是“低层次”函数。
-        例如使用  \cs{cs_if_exist:N(TF)}  而不是 \cs{if_cs_exist:N}。
-    \item 使用空格以增加代码的可读性。一般我们推荐以下的风格：
-        \begin{verbatim}
-        \cs_new:Npn \foo_bar:Nn #1#2
-         {
-           \cs_if_exist:NTF #1
-             { \__foo_bar:n {#2} }
-             { \__foo_bar:nn {#2} { literal } }
-         }
-        \end{verbatim}
-        在  |{| 和 |}| 周围使用空格，除非是单独的 |#1|, |#2| 等。
-    \item 将不同的代码项目分行放置：可读性比紧凑性有用的多。
-    \item 在函数和变量中使用长的描述性的名称，而对于辅助函数则使用父函数加上 |aux|, |auxi|, |auxii| 等前后缀。
-    \item 如果有任何疑问，通过 \href{http://news.gmane.org/group/gmane.comp.tex.latex.latex3}{LaTeX-L} 列表咨询团队：
-        相关人员会很快回复！
 \end{itemize}
 
 %
@@ -1583,7 +1589,7 @@
 % sense, recognising the \texttt{true} and \texttt{false} values. Giving
 % the option name alone is equivalent to using the option with the
 % \texttt{true} value.
-为了支持代码开发者，\LaTeXe{} 宏包 \pkg{expl3}  包含了少量导入时选项。
+为了支持代码开发者，\LaTeXe{} 宏包 \pkg{expl3} 包含了少量导入时选项。
 这些选项都以键值形式给出，并可以识别 \texttt{true} 和 \texttt{false} 值。
 只给出选项名等价于该选项使用 \texttt{true} 值。
 
@@ -1594,14 +1600,16 @@
 % which are constructed using macros as the underlying storage system. The
 % \texttt{check-declarations} option enables checking for all variable
 % assignments, issuing an error if any variables are assigned without being
-% initialised.  See also the function \cs{debug_check_declarations_on:}.
+% initialised.  See also \cs{debug_on:n} \texttt{\{check-declarations\}}
+% in \pkg{l3candidates} for finer control.
 \DescribeOption{check-declarations}
-所有用在 \LaTeX3 代码中的变量都必须声明。
+所有 \LaTeX3 代码中的变量都必须声明。
 对于基于 \TeX{} 寄存器的变量类型，这由 \TeX{} 强制执行；
 而出于底层的存储原因，对于使用宏构造的变量则不保证。
-选项 \texttt{check-declarations}  对于所有变量分配都开启检查，
+选项 \texttt{check-declarations} 则确保对于所有变量分配都开启检查，
 如果任何变量没有初始化则报错。
-另见函数  \cs{debug_check_declarations_on:}。
+另见 \pkg{l3candidates} 中的 \cs{debug_on:n} \texttt{\{check-declarations\}}，
+可以进行更精细的控制。
 
 %
 % \DescribeOption{log-functions}
@@ -1609,13 +1617,14 @@
 % function name in the \texttt{.log} file. This is useful for debugging
 % purposes, as it means that there is a complete list of all functions
 % created by each module loaded (with the exceptions of a very small number
-% required by the bootstrap code for \LaTeX3).  See also the function
-% \cs{debug_log_functions_on:}.
+% required by the bootstrap code for \LaTeX3).  See also \cs{debug_on:n}
+% \texttt{\{log-functions\}} in \pkg{l3candidates} for finer control.
 \DescribeOption{log-functions}
 该选项用于在 \texttt{.log} 文件中开启每一新函数名的记录。
 这会有一份由导入模块创建的全体函数列表
 （例外是 \LaTeX3 的bootstrap代码需要的一小部分）。
-另见函数 \cs{debug_log_functions_on:}。
+另见 \pkg{l3candidates} 中的\cs{debug_on:n} \texttt{\{log-functions\}}，
+可以进行更精细的控制。
 
 %
 % \DescribeOption{enable-debug}
@@ -1635,32 +1644,32 @@
 % \DescribeOption{driver}
 % Selects the driver to be used for color, graphics and related operations that
 % are driver-dependent. Options available are
+\DescribeOption{driver}
+选择颜色、图像和其它驱动相关操作所需要的驱动类型。可用选项有：
 % \begin{itemize}[font = \texttt]
+\begin{itemize}[font = \texttt]
 %   \item[auto] Let \LaTeX3 determine the correct driver. With DVI output, this
 %     selects the \texttt{dvips} back-end for \pdfTeX{} and \LuaTeX{}, and
 %     \texttt{dvipdfmx} for \pTeX{} and \upTeX{}.  This is the standard setting.
-%   \item[latex2e] Use the \pkg{graphics} package to select the driver, rather
-%     than \LaTeX3 code.
-%   \item[dvips] Use the \texttt{dvips} driver.
-%   \item[dvipdfmx] Use the \texttt{dvipdfmx} driver.
-%   \item[dvisvgm] Use the \texttt{dvisvgm} driver.
-%   \item[pdfmode] Use the \texttt{pdfmode} driver (direct PDF output from
-%     \pdfTeX{} or \LuaTeX{}).
-%   \item[xdvipdfmx] Use the \texttt{xdvipdfmx} driver (\XeTeX{} only).
-% \end{itemize}
-\DescribeOption{driver}
-选择颜色、图像和其它驱动相关操作所需要的驱动类型。可用选项有：
-\begin{itemize}[font = \texttt]
     \item[auto] 让 \LaTeX3 自己确定正确的驱动。
-    输出 DVI时，会为 \pdfTeX{} 和 \LuaTeX{} 选择 \texttt{dvips} 后端，
+    输出 DVI 时，会为 \pdfTeX{} 和 \LuaTeX{} 选择 \texttt{dvips} 后端，
     而对于 \pTeX{} 和 \upTeX{} 则会选择 \texttt{dvipdfmx}。
     这是标准设置。
+%   \item[latex2e] Use the \pkg{graphics} package to select the driver, rather
+%     than \LaTeX3 code.
     \item[latex2e] 使用 \pkg{graphics} 宏包代替 \LaTeX3 代码来选择驱动。
+%   \item[dvips] Use the \texttt{dvips} driver.
     \item[dvips] 使用 \texttt{dvips} 驱动。
+%   \item[dvipdfmx] Use the \texttt{dvipdfmx} driver.
     \item[dvipdfmx] 使用 \texttt{dvipdfmx} 驱动。
+%   \item[dvisvgm] Use the \texttt{dvisvgm} driver.
     \item[dvisvgm] 使用 \texttt{dvisvgm} 驱动。
+%   \item[pdfmode] Use the \texttt{pdfmode} driver (direct PDF output from
+%     \pdfTeX{} or \LuaTeX{}).
     \item[pdfmode] 使用 \texttt{pdfmode} 驱动（\pdfTeX{} 或 \LuaTeX{} 的直接PDF输出）。
+%   \item[xdvipdfmx] Use the \texttt{xdvipdfmx} driver (\XeTeX{} only).
     \item[xdvipdfmx] 使用 \texttt{xdvipdfmx} 驱动（仅用于 \XeTeX{}）。
+% \end{itemize}
 \end{itemize}
 
 %
@@ -1697,7 +1706,7 @@
 % loadable: package loading is dependent on the \LaTeXe{} package-management
 % mechanism.
 使用一般接口导入程序设计层面后，
-可以使用命令  \cs{ExplSyntaxOn} 和 \cs{ExplSyntaxOff}，
+可以使用命令 \cs{ExplSyntaxOn}、\cs{ExplSyntaxOff}、
 以及 \pkg{interface3} 中详细介绍的代码层面上的函数和变量。
 请注意不会导入其它\emph{使用} \pkg{expl3} 的 \LaTeXe{} 宏包：
 宏包导入取决于 \LaTeXe{} 的宏包管理机制。
@@ -1709,41 +1718,42 @@
 %
 % To use \pkg{expl3} and the higher level packages provided by the
 % team, the minimal set of primitive requirements is currently
+为了使用本团队提供的 \pkg{expl3} 和高层面宏包，
+目前原始命令需求的最小集合是
 % \begin{itemize}
+\begin{itemize}
 %    \item All of those from \TeX90.
+    \item \TeX90 中的全部。
 %    \item All of those from \eTeX{} \emph{excluding} |\TeXXeTstate|,
 %      |\beginL|, |\beginR|, |\endL| and |\endR| (\emph{i.e.}~excluding
 %      \TeX{}-\kern0pt-\reflectbox{\TeX{}}).
+    \item \eTeX{} 中的全部，\emph{除了} |\TeXXeTstate|, |\beginL|, |\beginR|, |\endL|, |\endR|
+    （即，除了 \TeX{}-\kern0pt-\reflectbox{\TeX{}}）。
 %    \item Functionality equivalent to the \pdfTeX{} primitive
 %      |\pdfstrcmp|.
+    \item 等价于 \pdfTeX{} 原始命令 |\pdfstrcmp| 的功能。
 % \end{itemize}
+\end{itemize}
 % Any engine which defines |\pdfoutput| (\emph{i.e.}~allows direct production
 % of a PDF file without a DVI intermediate) must also provide |\pdfcolorstack|,
 % |\pdfliteral|, |\pdfmatrix|, |\pdfrestore| and |\pdfsave| or equivalent
-% functionality.
-为了使用本团队提供的 \pkg{expl3} 和高层面宏包，
-目前原始命令需求的最小集合是
-\begin{itemize}
-    \item \TeX90 中的全部。
-    \item \eTeX{} 中的全部，\emph{除了} |\TeXXeTstate|, |\beginL|, |\beginR|, |\endL|, |\endR| 
-    （即，除了 \TeX{}-\kern0pt-\reflectbox{\TeX{}}）。
-    \item 等价于 \pdfTeX{} 原始命令 |\pdfstrcmp| 的功能。
-\end{itemize}
+% functionality. Fully Unicode engines must provide a method for producing
+% character tokens in an expandable manner.
 任何定义了 |\pdfoutput|（即，允许不经中间的DVI直接生成 PDF文件）
 的引擎必须同时提供 |\pdfcolorstack|, |\pdfliteral|, |\pdfmatrix|, |\pdfrestore|, |\pdfsave| 或者等价的功能。
+Unicode引擎必须提供以可展开方式生成字符记号的方法。
 
 %
-% Practically, these requirements are met by the engines
 % \begin{itemize}
 %    \item \pdfTeX{} v1.40 or later.
-%    \item \XeTeX{} v0.9994 or later.
-%    \item \LuaTeX{} v0.70 or later.
-%    \item e-(u)p\TeX{} mid-2012 or later.
+%    \item \XeTeX{} v0.99992 or later.
+%    \item \LuaTeX{} v0.76 or later.
+%    \item e-(u)\pTeX{} mid-2012 or later.
 % \end{itemize}
 实际中，以下引擎可以满足这些需求
 \begin{itemize}
     \item \pdfTeX{} v1.40 或之后版本。
-    \item \XeTeX{} v0.9994或之后版本。
+    \item \XeTeX{} v0.99992 或之后版本。
     \item \LuaTeX{} v0.70 或之后版本。
     \item e-(u)p\TeX{} 2012 中期或之后版本。
 \end{itemize}
