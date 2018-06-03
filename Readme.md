@@ -1,5 +1,5 @@
 # LaTeX3-doc-cn
-翻译一些一些关于 LaTeX3 的材料
+翻译一些关于 LaTeX3 的材料
 
 ## `expl3-doc-cn`
 这份文档是英文文档 [expl3.pdf](http://mirrors.ctan.org/macros/latex/contrib/l3kernel/expl3.pdf) 的中文翻译。
