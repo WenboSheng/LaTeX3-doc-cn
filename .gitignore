@@ -187,6 +187,7 @@ TSWLatexianTemp*
 
 # system
 .DS_Store
+._*
 
 # misc
 *.hd
