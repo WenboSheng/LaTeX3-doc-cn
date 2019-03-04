@@ -21,13 +21,13 @@
 %    }^^A
 % }
 %
-% \date{Released 2018-05-13}
+% \date{Released 2019-01-01}
 
 \begin{document}
     
 \title{\textsf{expl3} 宏包与 \LaTeX3 编程\footnotemark}
 \author{\LaTeX3 项目组}
-\date{发布于 2018-08-23}
+\date{2019-01-01}
 
 \maketitle
 
@@ -43,7 +43,8 @@
         \item[interface] 一般情况下翻译为“接口”。
         \item[primitive] (e)\TeX{} 以及各引擎提供的基本命令（控制序列），翻译为“原始命令”。
         \item[token]  这是 \TeX{} 中的一个基本概念，然而确实很难找到一个确切的中文词汇与之对应。
-        这里遵从zoho在 \href{https://github.com/CTeX-org/tex-impatient-cn/}{\emph{\TeX{} for the Impatient}} 等著作中的处理方式翻译为“记号”。
+        这里遵从zoho在 \href{https://github.com/CTeX-org/tex-impatient-cn/}{\emph{\TeX{} for the Impatient}} 
+        等著作中的处理方式翻译为“记号”。
         进而“token list”翻译为“记号序列”。
         \item[register] 翻译为“寄存器”。
         \item[quark] \LaTeX3 中的新概念，暂时按照物理学中的称呼翻译为“夸克”。
@@ -64,7 +65,6 @@
 % \begin{abstract}
 \begin{abstract}
 
-%
 % This document gives an introduction to a new set of programming
 % conventions that have been designed to meet the requirements of
 % implementing large scale \TeX{} macro programming projects such as
@@ -72,7 +72,6 @@
 针对 \LaTeX{} 等大型 \TeX{} 宏编程项目对编程风格设计的需求，
 本文介绍一套属于 \LaTeX3 的基础层面的全新程序设计约定。
 
-%
 % The main features of the system described are:
 % \begin{itemize}
 %   \item classification of the macros (or, in \LaTeX{} terminology,
@@ -97,7 +96,6 @@
 请注意，该语言不是为了用在文档标记或者样式规范中，
 而是为了构建其基础。
 
-%
 % This document is an introduction to the ideas behind the \pkg{expl3}
 % programming interface. For the complete documentation of the programming
 % layer provided by the \LaTeX3 Project, see the accompanying
@@ -109,10 +107,9 @@
 % \end{abstract}
 \end{abstract}
 
-%
 % \section{Introduction}
 \section{简介}
-%
+
 % The first step to develop a \LaTeX{} kernel beyond \LaTeXe{} is to
 % address how the underlying system is programmed.  Rather than the
 % current mix of \LaTeX{} and \TeX{} macros, the \LaTeX3 system provides
@@ -122,10 +119,9 @@
 % efficiently without needing to be familiar with the internal nature
 % of the kernel or with plain \TeX{}.
 %
-
 在 \LaTeXe{} 之后，开发 \LaTeX{} 内核的第一步就是如何设计底层系统编程。
 当前的情况是混合使用 \LaTeX{} 和 \TeX{} 宏。
-与此不同的是，\LaTeX3 系统提供了自己的一套接口，用于控制 \TeX{} 所需的所有函数。
+与此不同的是，\LaTeX3 系统为所有需要控制 \TeX{} 的函数提供了一套完整的接口。
 这项工作中关键的一部分就是确保所有的一切都是文档化的，
 这样即便 \LaTeX{} 程序员和用户不熟悉内核机制或者 plain\TeX{}，也可以进行高效开发。
 
@@ -135,7 +131,6 @@
 % programmers starting with \LaTeX3 need to become familiar with
 % the syntax of the new language.
 %
-
 \pkg{expl3} 宏集提供了新的 \LaTeX{} 程序设计接口。
 为了使编程系统化，\LaTeX3 使用了与 \LaTeXe{} 或 plain \TeX{} 截然不同的程序风格约定。
 因此，进行 \LaTeX3 开发需要熟悉这种全新的语法规则。
@@ -145,26 +140,24 @@
 % features of the syntactic structure of command names, including the
 % argument specification syntax used in function names.
 %
-
 下一节将展示，在一个完整的 \TeX{} 文档处理系统中，这项语言适用于哪些地方。
 之后将描述命令名称的语法结构的主要特性，比如函数选项的语法规范。
-然后将解释这种选项语法背后的实用思想，
-同时也包括展开控制机制和定义不同形式函数的接口。
 % The practical ideas behind this argument syntax will be explained,
 % together with the expansion control mechanism and the interface
 % used to define variant forms of functions.
 %
-
-我们将说明，
-使用结构化的命名规则和多样化的函数形式能够极大提高代码的可读性以及可靠性。
-此外，实践表明，新语法导致的长命令名不会明显加剧写代码开发的困难程度。
+然后将解释这种选项语法背后的实用思想，
+同时也包括展开控制机制和定义不同形式函数的接口。
 
 % As we shall demonstrate, the use of a structured naming scheme and of
 % variant forms for functions greatly improves the readability of the
 % code and hence also its reliability.  Moreover, experience has shown
 % that the longer command names which result from the new syntax do not
 % make the process of \emph{writing} code significantly harder.
-%
+我们将说明，
+使用结构化的命名规则和多样化的函数形式能够极大提高代码的可读性以及可靠性。
+此外，实践表明，新语法导致的长命令名不会明显加剧写代码开发的困难程度。
+
 % \section{Languages and interfaces}
 \section{语言和接口}
 %
